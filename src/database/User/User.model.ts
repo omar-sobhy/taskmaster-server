@@ -7,7 +7,7 @@ const UserSchema = new mongoose.Schema({
   password: String,
 
   projects: [{
-    ref: 'User',
+    ref: 'Project',
     type: mongoose.Schema.Types.ObjectId,
   }],
 });
