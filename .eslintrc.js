@@ -22,7 +22,7 @@ module.exports = {
         'semi': ['error', 'always'],
         'quotes': ['error', 'single'],
         'no-console': ['off'],
-        '@typescript-eslint/no-use-before-define': ['off']
-        // 'import/no-cycle': ['off']
+        '@typescript-eslint/no-use-before-define': ['off'],
+        'no-underscore-dangle': ['off']
     }
 };
