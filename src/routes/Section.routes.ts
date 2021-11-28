@@ -4,8 +4,6 @@ import {
 import Controller from '../controllers/Controller.interface';
 import { createSections } from '../controllers/Project.controllers';
 import { getSections } from '../controllers/Section.controllers';
-import ProjectModel from '../database/Project/Project.model';
-import Section from '../database/Section/Section.interface';
 import CreateSectionsDto from '../dtos/Projects/CreateSections.dto';
 import ProjectNotFoundException from '../exceptions/projects/ProjectNotFoundException';
 import validationMiddleware from '../middleware/validation.middleware';
