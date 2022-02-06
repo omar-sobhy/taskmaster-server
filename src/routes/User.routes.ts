@@ -1,19 +1,22 @@
 import {
   NextFunction, Request, Response, Router,
 } from 'express';
-import Controller from '../controllers/Controller.interface';
+import RouterWrapper from '../controllers/RouterWrapper.interface';
 import * as UserController from '../controllers/User.controllers';
+import { getByIds } from '../controllers/User.controllers';
 import CreateUserDto from '../dtos/Users/CreateUser.dto';
+import GetUsersDto from '../dtos/Users/GetUsers.dto';
 import LoginDto from '../dtos/Users/Login.dto';
 import NotAuthorisedException from '../exceptions/auth/NotAuthorizedException';
+import HttpException from '../exceptions/HttpException';
 import UserAlreadyExistsException from '../exceptions/users/UserAlreadyExistsException';
-import UserNotFoundException from '../exceptions/users/UserNotFoundException';
+import InvalidUsernameOrPassword from '../exceptions/users/InvalidUsernameOrPasswordException';
 import RequestWithUser from '../interfaces/RequestWithUser.interface';
 import authMiddleware from '../middleware/auth.middleware';
 import validationMiddleware from '../middleware/validation.middleware';
 import AuthenticationService from '../services/Authentication.service';
 
-class UserRoutes implements Controller {
+class UserRoutes implements RouterWrapper {
   public path = '/users';
 
   public router = Router();
@@ -23,6 +26,7 @@ class UserRoutes implements Controller {
   }
 
   private initializeRoutes() {
+    this.router.get(`${this.path}`, validationMiddleware(GetUsersDto), UserRoutes.getUserData);
     this.router.post(`${this.path}/login`, validationMiddleware(LoginDto), UserRoutes.login);
     this.router.post(`${this.path}/signup`, validationMiddleware(CreateUserDto), UserRoutes.signUp);
     this.router.get(`${this.path}/:userId/projects`, UserRoutes.projects);
@@ -34,7 +38,7 @@ class UserRoutes implements Controller {
     const { username, password } = req.body;
     UserController.login(username, password).then(async (user) => {
       if (user === null) {
-        next(new UserNotFoundException());
+        next(new InvalidUsernameOrPassword());
       } else {
         const tokenData = await AuthenticationService.createToken(user);
 
@@ -82,6 +86,27 @@ class UserRoutes implements Controller {
       UserController.getProjects(id.toString()).then((projects) => {
         res.json({ projects });
       });
+    }
+  }
+
+  private static async getUserData(req: Request, res: Response, next: NextFunction) {
+    const { userIds } = req.body;
+
+    const usersOrErrors = await getByIds(userIds);
+    if (usersOrErrors.length === 0) {
+      res.json({
+        users: [],
+      }).end();
+    } else if (typeof usersOrErrors[0] === 'string') {
+      const message = usersOrErrors
+        .map((id) => `No user with id '${id}' found.`)
+        .join('\n');
+
+      next(new HttpException(404, message));
+    } else {
+      res.json({
+        users: usersOrErrors,
+      }).end();
     }
   }
 }

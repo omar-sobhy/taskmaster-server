@@ -1,18 +1,23 @@
 import {
   NextFunction, Request, Response, Router,
 } from 'express';
-import Controller from '../controllers/Controller.interface';
-import { createProject, createSections, getProjects } from '../controllers/Project.controllers';
-import Project from '../database/Project/Project.interface';
+import mongoose from 'mongoose';
+import RouterWrapper from '../controllers/RouterWrapper.interface';
 import ProjectModel from '../database/Project/Project.model';
+import { createProject, createSections, getProjects } from '../database_functions/Project.database.functions';
 import CreateProjectDto from '../dtos/Projects/CreateProject.dto';
-import CreateSectionsDto from '../dtos/Projects/CreateSections.dto';
 import ProjectNotFoundException from '../exceptions/projects/ProjectNotFoundException';
+import InvalidUsernameOrPassword from '../exceptions/users/InvalidUsernameOrPasswordException';
+import UserNotFoundException from '../exceptions/users/UserNotFoundException';
 import RequestWithUser from '../interfaces/RequestWithUser.interface';
 import authMiddleware from '../middleware/auth.middleware';
 import validationMiddleware from '../middleware/validation.middleware';
+import Section from '../database/Section/Section.interface';
+import CreateSectionsDto from '../dtos/Projects/CreateSections.dto';
+import TagModel from '../database/Tag/Tag.model';
+import CreateTagDto from '../dtos/Projects/CreateTag.dto';
 
-class ProjectRoutes implements Controller {
+class ProjectRoutes implements RouterWrapper {
   public path = '/projects';
 
   public router = Router();
@@ -35,18 +40,33 @@ class ProjectRoutes implements Controller {
 
     this.router.get(`${this.path}/:projectId`, ProjectRoutes.getProjectData);
 
-    // this.router.post(
-    //   `${this.path}/:projectId/sections/create`,
-    //   validationMiddleware(CreateSectionsDto),
-    //   ProjectRoutes.createSections,
-    // );
+    this.router.get(`${this.path}/:projectId/sections`, ProjectRoutes.getSections);
+
+    this.router.get(`${this.path}/:projectId/tags`, ProjectRoutes.getTags);
+
+    this.router.post(
+      `${this.path}/:projectId/sections/create`,
+      validationMiddleware(CreateSectionsDto),
+      ProjectRoutes.createSections,
+    );
+
+    this.router.post(
+      `${this.path}/:projectId/tags`,
+      validationMiddleware(CreateTagDto),
+      ProjectRoutes.createTag,
+    );
   }
 
-  private static async createProject(req: Request, res: Response) {
+  private static async createProject(req: Request, res: Response, next: NextFunction) {
     const { _id: userId } = (req as RequestWithUser).user;
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const project = (await createProject(userId.toString(), req.body.name))!;
+    const projectOrError = await createProject(userId.toString(), req.body.name);
+    if (projectOrError.type === 'error') {
+      next(new UserNotFoundException(userId.toString()));
+      return;
+    }
+
+    const project = projectOrError.data;
 
     const projectId = project._id.toString();
 
@@ -82,9 +102,13 @@ class ProjectRoutes implements Controller {
       project: projectId,
     }];
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const sections = (await createSections(projectId, sectionData))!;
+    const sectionsOrError = await createSections(projectId, sectionData);
+    if (sectionsOrError.type === 'error') {
+      next(new ProjectNotFoundException(projectId));
+      return;
+    }
 
+    const sections = sectionsOrError.data;
     project.sections = sections.map((s) => s._id);
 
     res.json({
@@ -92,10 +116,16 @@ class ProjectRoutes implements Controller {
     }).end();
   }
 
-  private static async getProjectsForUser(req: Request, res: Response) {
+  private static async getProjectsForUser(req: Request, res: Response, next: NextFunction) {
     const { _id: userId } = (req as RequestWithUser).user;
 
-    const projects = await getProjects(userId.toString());
+    const projectsOrError = await getProjects(userId.toString());
+    if (projectsOrError.type === 'error') {
+      next(new UserNotFoundException(userId.toString()));
+      return;
+    }
+
+    const projects = projectsOrError.data;
 
     res.json({
       projects,
@@ -107,26 +137,84 @@ class ProjectRoutes implements Controller {
 
     const { sectionData } = req.body;
 
-    const sections = await createSections(projectId, sectionData);
-
-    if (sections === null) {
+    const sectionsOrError = await createSections(projectId, sectionData);
+    if (sectionsOrError.type === 'error') {
       next(new ProjectNotFoundException(projectId));
-    } else {
-      res.json({
-        sections,
-      }).end();
+      return;
     }
+
+    const sections = sectionsOrError.data;
+
+    res.json({
+      sections,
+    }).end();
   }
 
   private static async getProjectData(req: Request, res: Response, next: NextFunction) {
     const { projectId } = req.params;
-    if (!projectId) {
-      next(new ProjectNotFoundException(projectId));
-    } else {
+    try {
       const project = await ProjectModel.findById(projectId);
       res.json({
         project,
       }).end();
+    } catch (error) {
+      next(new ProjectNotFoundException(projectId));
+    }
+  }
+
+  private static async getSections(req: Request, res: Response, next: NextFunction) {
+    const { projectId } = req.params;
+    try {
+      const project = await ProjectModel.findById(projectId);
+      if (!project) {
+        next(new ProjectNotFoundException(projectId));
+        return;
+      }
+
+      const populatedProject = await project.populate<{ sections: Section[] }>('sections', '-__v');
+      res.json({
+        sections: populatedProject.sections,
+      }).end();
+    } catch (error) {
+      next(new ProjectNotFoundException(projectId));
+    }
+  }
+
+  public static async getTags(req: Request, res: Response, next: NextFunction) {
+    const { projectId } = req.params;
+    try {
+      const tags = await TagModel.find({
+        project: new mongoose.Types.ObjectId(projectId),
+      });
+
+      res.json({
+        tags,
+      }).end();
+    } catch (error) {
+      next(new ProjectNotFoundException(projectId));
+    }
+  }
+
+  public static async createTag(req: Request, res: Response, next: NextFunction) {
+    const { projectId } = req.params;
+    const { name } = req.body;
+
+    try {
+      const tag = await new TagModel({
+        name,
+        project: projectId,
+      }).save();
+
+      res.json({
+        tag: {
+          name: tag.name,
+          project: tag.project,
+          tasks: tag.tasks,
+          _id: tag._id,
+        },
+      }).end();
+    } catch (error) {
+      next(new ProjectNotFoundException(projectId));
     }
   }
 }

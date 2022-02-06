@@ -3,13 +3,16 @@ import * as mongoose from 'mongoose';
 import Tag from './Tag.interface';
 
 const TagSchema = new mongoose.Schema({
-  _id: ObjectId,
-
   name: String,
+
+  project: {
+    ref: 'Project',
+    type: ObjectId,
+  },
 
   tasks: [{
     ref: 'Task',
-    type: mongoose.Types.ObjectId,
+    type: ObjectId,
   }],
 });
 

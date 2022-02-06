@@ -17,6 +17,27 @@ async function getById(userId: string | ObjectId): Promise<User | null> {
   return UserModel.findById(userId);
 }
 
+async function getByIds(userIds: string[] | ObjectId[]): Promise<User[] | string[]> {
+  const usersAndErrors = await Promise.all(userIds.map(async (id) => {
+    try {
+      const user = UserModel.findById(id, '-password -__v');
+      if (user === null) {
+        return id;
+      }
+      return await user;
+    } catch (error) {
+      return id;
+    }
+  }));
+
+  const errors = usersAndErrors.filter((obj) => typeof obj === 'string') as string[];
+  if (errors.length !== 0) {
+    return errors;
+  }
+
+  return usersAndErrors as User[];
+}
+
 async function login(username: string, password: string): Promise<User | null> {
   const user = await UserModel.findOne({
     username,
@@ -68,11 +89,11 @@ async function projects(id: string): Promise<Project[] | null> {
     return null;
   }
 
-  const populatedUser = await user.populate< { projects: Project[] }>('projects', '-password');
+  const populatedUser = await user.populate< { projects: Project[] }>('projects', '-password -__v');
 
   return populatedUser.projects;
 }
 
 export {
-  getById, login, signUp, projects as getProjects,
+  getById, getByIds, login, signUp, projects as getProjects,
 };

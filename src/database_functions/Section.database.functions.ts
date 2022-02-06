@@ -8,10 +8,13 @@ import Result from '../interfaces/Result';
 async function createSections(
   projectId: string,
   sectionData: [{ name: string, colour: string, icon: string }],
-): Promise<Section[] | null> {
+): Promise<Result<Section[], 'PROJECT_NOT_FOUND'>> {
   const project = await ProjectModel.findById(projectId);
   if (!project) {
-    return null;
+    return {
+      type: 'error',
+      errorType: 'PROJECT_NOT_FOUND',
+    };
   }
 
   const sections = sectionData.map(({ name, colour, icon }) => new SectionModel({
@@ -21,24 +24,37 @@ async function createSections(
     project: project.id,
   }));
 
-  return Promise.all(sections);
+  return {
+    type: 'success',
+    data: await Promise.all(sections),
+  };
 }
 
-async function getSections(projectId: string): Promise<Section[] | null> {
+async function getSections(projectId: string)
+  : Promise<Result<Section[], 'PROJECT_NOT_FOUND'>> {
   try {
     const project = await ProjectModel.findById(projectId);
     if (!project) {
-      return null;
+      return {
+        type: 'error',
+        errorType: 'PROJECT_NOT_FOUND',
+      };
     }
 
     const populatedProject = await project.populate<{ sections: Section[] }>('sections', '-__v');
 
     const { sections } = populatedProject;
 
-    return sections;
+    return {
+      type: 'success',
+      data: sections,
+    };
   } catch (error) {
     console.error(error);
-    return null;
+    return {
+      type: 'error',
+      errorType: 'PROJECT_NOT_FOUND',
+    };
   }
 }
 
@@ -47,11 +63,14 @@ async function updateSection(
   name?: string,
   colour?: string,
   icon?: string,
-): Promise<Section | null> {
+): Promise<Result<Section, 'SECTION_NOT_FOUND'>> {
   try {
     const section = await SectionModel.findById(sectionId);
     if (section === null) {
-      return null;
+      return {
+        type: 'error',
+        errorType: 'SECTION_NOT_FOUND',
+      };
     }
 
     section.name = name ?? section.name;
@@ -60,9 +79,15 @@ async function updateSection(
 
     await section.save();
 
-    return section;
+    return {
+      type: 'success',
+      data: section,
+    };
   } catch (error) {
-    return null;
+    return {
+      type: 'error',
+      errorType: 'SECTION_NOT_FOUND',
+    };
   }
 }
 
@@ -78,6 +103,17 @@ async function createTask(
       return {
         type: 'error',
         errorType: 'SECTION_NOT_FOUND',
+      };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const project = (await ProjectModel.findById(section.project))!;
+    const user = project.users.find((u) => u.toString() === assignee);
+    if (!user) {
+      return {
+        type: 'error',
+        errorType: 'ASSIGNEE_NOT_IN_PROJECT',
+        errorData: '',
       };
     }
 

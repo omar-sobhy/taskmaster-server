@@ -8,31 +8,35 @@ const TaskSchema = new mongoose.Schema({
 
   section: {
     ref: 'Section',
-    type: mongoose.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
   },
 
   assignee: {
     ref: 'User',
-    type: mongoose.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
   },
   watchers: [{
     ref: 'User',
-    type: mongoose.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
   }],
   checklistItems: [{
     ref: 'ChecklistItem',
-    type: mongoose.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
   }],
   comments: [{
     ref: 'Comment',
-    type: mongoose.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
   }],
   historyItems: [{
     ref: 'HistoryItem',
-    type: mongoose.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
   }],
   tags: [{
     ref: 'Tag',
-    type: mongoose.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
   }],
 });
+
+const TaskModel = mongoose.model<Task>('Task', TaskSchema);
+
+export default TaskModel;

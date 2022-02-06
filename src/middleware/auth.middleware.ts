@@ -3,7 +3,7 @@ import { NextFunction, Response, Request } from 'express';
 import * as jwt from 'jsonwebtoken';
 import UserModel from '../database/User/User.model';
 import InvalidAuthenticationTokenException from '../exceptions/auth/InvalidAuthenticationToken';
-import MissingAuthenticationTokenException from '../exceptions/MissingAuthenticationTokenException';
+import MissingAuthenticationTokenException from '../exceptions/auth/MissingAuthenticationTokenException';
 import DataInJwtToken from '../interfaces/DataInJwtToken.interface';
 
 async function authMiddleware(

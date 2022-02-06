@@ -3,23 +3,35 @@ import ProjectModel from '../database/Project/Project.model';
 import UserModel from '../database/User/User.model';
 import Section from '../database/Section/Section.interface';
 import SectionModel from '../database/Section/Section.model';
+import Result from '../interfaces/Result';
 
-async function getProjects(userId: string): Promise<Project[] | null> {
+async function getProjects(userId: string)
+  : Promise<Result<Project[], 'USER_NOT_FOUND'>> {
   const user = await UserModel.findById(userId);
 
   if (user === null) {
-    return null;
+    return {
+      type: 'error',
+      errorType: 'USER_NOT_FOUND',
+    };
   }
 
   const populatedUser = await user.populate<{ projects: Project[] }>('projects');
 
-  return populatedUser.projects;
+  return {
+    type: 'success',
+    data: populatedUser.projects,
+  };
 }
 
-async function createProject(userId: string, name: string): Promise<Project | null> {
+async function createProject(userId: string, name: string)
+  : Promise<Result<Project, 'USER_NOT_FOUND'>> {
   const user = await UserModel.findById(userId);
   if (!user) {
-    return null;
+    return {
+      type: 'error',
+      errorType: 'USER_NOT_FOUND',
+    };
   }
 
   const newProject = await new ProjectModel({
@@ -32,27 +44,40 @@ async function createProject(userId: string, name: string): Promise<Project | nu
   user.projects.push(newProject!.id);
   user.save();
 
-  return newProject;
+  return {
+    type: 'success',
+    data: newProject,
+  };
 }
 
-async function getSections(projectId: string): Promise<Section[] | null> {
+async function getSections(projectId: string)
+  : Promise<Result<Section[], 'PROJECT_NOT_FOUND'>> {
   const project = await ProjectModel.findById(projectId);
   if (project === null) {
-    return null;
+    return {
+      type: 'error',
+      errorType: 'PROJECT_NOT_FOUND',
+    };
   }
 
-  const populatedProject = await project.populate< { sections: Section[] }>('sections');
+  const populatedProject = await project.populate< { sections: Section[] }>('sections', '-__v');
 
-  return populatedProject.sections;
+  return {
+    type: 'success',
+    data: populatedProject.sections,
+  };
 }
 
 async function createSections(
   projectId: string,
   sectionData: [{ name: string, colour: string, icon: string }],
-): Promise<Section[] | null> {
+): Promise<Result<Section[], 'PROJECT_NOT_FOUND'>> {
   const project = await ProjectModel.findById(projectId);
   if (!project) {
-    return null;
+    return {
+      type: 'error',
+      errorType: 'PROJECT_NOT_FOUND',
+    };
   }
 
   const sections = sectionData.map(({ name, colour, icon }) => new SectionModel({
@@ -71,10 +96,11 @@ async function createSections(
 
   await project.save();
 
-  return allPromise;
+  return {
+    type: 'success',
+    data: allPromise,
+  };
 }
-
-export default { createSections };
 
 export {
   createProject, getProjects, getSections, createSections,
