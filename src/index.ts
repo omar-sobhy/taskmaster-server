@@ -5,6 +5,8 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 
+import https from 'https';
+
 import initDb from './database';
 import errorMiddleware from './middleware/error.middleware';
 import loggerMiddleware from './middleware/logger.middleware';
@@ -56,7 +58,11 @@ async function start() {
     const port = 3000;
 
     app.listen(port, () => {
-      console.log(`Listening at port ${port}`);
+      console.log(`Listening (http) at port ${port}`);
+    });
+
+    https.createServer(app).listen(port + 1, () => {
+      console.log(`Listening (https) at port ${port + 1}`);
     });
   } catch (error) {
     console.error('An error was thrown while starting. Exiting...');
