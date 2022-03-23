@@ -13,7 +13,7 @@ function validationMiddleware<T>(type: ClassConstructor<T>): express.RequestHand
             .map((error: ValidationError) => Object.values(error.constraints!))
             .join('\n');
 
-          res.json({
+          res.status(400).json({
             error: {
               message,
             },

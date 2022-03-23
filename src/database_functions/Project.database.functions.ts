@@ -24,7 +24,7 @@ async function getProjects(userId: string)
   };
 }
 
-async function createProject(userId: string, name: string)
+async function createProject(userId: string, name: string, background: string)
   : Promise<Result<Project, 'USER_NOT_FOUND'>> {
   const user = await UserModel.findById(userId);
   if (!user) {
@@ -36,7 +36,7 @@ async function createProject(userId: string, name: string)
 
   const newProject = await new ProjectModel({
     name,
-    background: '#c4c4c4',
+    background,
     users: [userId],
   }).save();
 

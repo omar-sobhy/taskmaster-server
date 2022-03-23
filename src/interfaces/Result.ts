@@ -12,3 +12,5 @@ type Failure<T = never> = {
 type Result<T, E = never> = Success<T> | Failure<E>;
 
 export default Result;
+
+export { Success, Failure };

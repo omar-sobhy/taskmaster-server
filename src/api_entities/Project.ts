@@ -1,5 +1,5 @@
 import Section from './Section';
-import User from './User';
+import { User } from './User';
 
 interface Project {
   name: string

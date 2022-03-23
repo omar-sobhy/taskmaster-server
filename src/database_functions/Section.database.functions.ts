@@ -94,8 +94,8 @@ async function updateSection(
 async function createTask(
   sectionId: string,
   name: string,
-  dueDate: Date,
-  assignee: string,
+  dueDate: Date | undefined,
+  assignee: string | undefined,
 ): Promise<Result<Task, 'ASSIGNEE_NOT_IN_PROJECT' | 'SECTION_NOT_FOUND'>> {
   try {
     const section = await SectionModel.findById(sectionId);
@@ -108,20 +108,28 @@ async function createTask(
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const project = (await ProjectModel.findById(section.project))!;
-    const user = project.users.find((u) => u.toString() === assignee);
-    if (!user) {
-      return {
-        type: 'error',
-        errorType: 'ASSIGNEE_NOT_IN_PROJECT',
-        errorData: '',
-      };
+    if (assignee) {
+      const user = project.users.find((u) => u.toString() === assignee);
+      if (!user) {
+        return {
+          type: 'error',
+          errorType: 'ASSIGNEE_NOT_IN_PROJECT',
+          errorData: project._id,
+        };
+      }
     }
 
-    const task = await new TaskModel({
+    const data: Record<string, unknown> = {
       name,
-      dueDate,
-      assignee,
-    }).save();
+      created: new Date(),
+      updated: new Date(),
+      section: section._id,
+    };
+
+    if (dueDate) data.dueDate = dueDate;
+    if (assignee) data.assignee = assignee;
+
+    const task = await new TaskModel(data).save();
 
     section.tasks.push(task._id);
 

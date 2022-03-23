@@ -5,6 +5,10 @@ const TaskSchema = new mongoose.Schema({
   name: String,
   status: String,
   dueDate: Date,
+  description: String,
+
+  created: Date,
+  updated: Date,
 
   section: {
     ref: 'Section',
@@ -25,10 +29,6 @@ const TaskSchema = new mongoose.Schema({
   }],
   comments: [{
     ref: 'Comment',
-    type: mongoose.Schema.Types.ObjectId,
-  }],
-  historyItems: [{
-    ref: 'HistoryItem',
     type: mongoose.Schema.Types.ObjectId,
   }],
   tags: [{

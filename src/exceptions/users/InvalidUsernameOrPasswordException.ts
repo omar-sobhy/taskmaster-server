@@ -2,7 +2,7 @@ import HttpException from '../HttpException';
 
 class InvalidUsernameOrPassword extends HttpException {
   constructor() {
-    super(500, 'Invalid username or password');
+    super(401, 'Invalid username or password');
   }
 }
 

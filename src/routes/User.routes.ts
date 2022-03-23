@@ -26,7 +26,7 @@ class UserRoutes implements RouterWrapper {
   }
 
   private initializeRoutes() {
-    this.router.get(`${this.path}`, validationMiddleware(GetUsersDto), UserRoutes.getUserData);
+    this.router.post(`${this.path}`, validationMiddleware(GetUsersDto), UserRoutes.getUserData);
     this.router.post(`${this.path}/login`, validationMiddleware(LoginDto), UserRoutes.login);
     this.router.post(`${this.path}/signup`, validationMiddleware(CreateUserDto), UserRoutes.signUp);
     this.router.get(`${this.path}/:userId/projects`, UserRoutes.projects);

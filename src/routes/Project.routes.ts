@@ -55,12 +55,20 @@ class ProjectRoutes implements RouterWrapper {
       validationMiddleware(CreateTagDto),
       ProjectRoutes.createTag,
     );
+
+    this.router.all(`${this.path}`, authMiddleware);
+    this.router.all(`${this.path}/*`, authMiddleware);
   }
 
   private static async createProject(req: Request, res: Response, next: NextFunction) {
     const { _id: userId } = (req as RequestWithUser).user;
 
-    const projectOrError = await createProject(userId.toString(), req.body.name);
+    const projectOrError = await createProject(
+      userId.toString(),
+      req.body.name,
+      req.body.background,
+    );
+
     if (projectOrError.type === 'error') {
       next(new UserNotFoundException(userId.toString()));
       return;

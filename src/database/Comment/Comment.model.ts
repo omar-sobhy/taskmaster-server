@@ -3,9 +3,15 @@ import Comment from './Comment.interface';
 
 const CommentSchema = new mongoose.Schema({
   text: String,
+  date: Date,
+
   task: {
     ref: 'Task',
-    type: mongoose.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
+  },
+  owner: {
+    ref: 'User',
+    type: mongoose.Schema.Types.ObjectId,
   },
 });
 

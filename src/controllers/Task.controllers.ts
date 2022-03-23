@@ -35,6 +35,9 @@ async function createTask(
       name,
       dueDate,
       assignee,
+      created: new Date(),
+      updated: new Date(),
+      section: section._id,
     }).save();
 
     return {
