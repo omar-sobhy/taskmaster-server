@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "start": "node ./build/index.js"
+    "start": "node ./build/index.js --mode=prod",
+    "dev": "node ./build/index.js --mode=dev"
   },
   "author": "",
   "license": "ISC",
@@ -26,10 +27,12 @@
     "mongodb": "^4.2.0",
     "mongoose": "^6.0.13",
     "reflect-metadata": "^0.1.13",
-    "typescript": "^4.5.2"
+    "typescript": "^4.5.2",
+    "yargs": "^17.4.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.12",
+    "@types/yargs": "^17.0.10",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
     "eslint": "^8.3.0",

@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 
 import fs from 'fs';
 import https from 'https';
+import yargs from 'yargs/yargs';
 
 import initDb from './database';
 import errorMiddleware from './middleware/error.middleware';
@@ -17,8 +18,6 @@ import SectionRoutes from './routes/Section.routes';
 import TaskRoutes from './routes/Task.routes';
 import CommentRoutes from './routes/Comment.routes';
 
-dotenv.config();
-
 const routes = [new UserRoutes(),
   new ProjectRoutes(),
   new SectionRoutes(),
@@ -27,6 +26,18 @@ const routes = [new UserRoutes(),
 ];
 
 async function start() {
+  const argv = yargs(process.argv.slice(2)).options({
+    mode: { type: 'string', default: 'dev' },
+  }).parseSync();
+
+  if (argv.mode.toLowerCase() === 'dev') {
+    console.log('Loading dev environment...');
+    dotenv.config({ path: '.env.dev' });
+  } else {
+    console.log('Loading prod environment...');
+    dotenv.config();
+  }
+
   const app = express();
 
   app.use(express.json());
@@ -62,7 +73,7 @@ async function start() {
       console.log(`Listening (http) at port ${port}`);
     });
 
-    if (process.env.USE_HTTPS) {
+    if (process.env.USE_HTTPS?.toLowerCase().trim() === 'true') {
       if (!process.env.CERT_PATH) {
         console.log('Cert path not found in environment variables');
         throw new Error();
