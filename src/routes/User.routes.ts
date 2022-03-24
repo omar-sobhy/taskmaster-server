@@ -61,7 +61,7 @@ class UserRoutes implements RouterWrapper {
       if (user === null) {
         next(new UserAlreadyExistsException(username));
       } else {
-        const tokenData = await AuthenticationService.createToken(req.body);
+        const tokenData = await AuthenticationService.createToken(user);
 
         res.cookie('Authorization', tokenData.token);
 
