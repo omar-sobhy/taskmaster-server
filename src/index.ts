@@ -5,6 +5,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 
+import fs from 'fs';
 import https from 'https';
 
 import initDb from './database';
@@ -61,9 +62,29 @@ async function start() {
       console.log(`Listening (http) at port ${port}`);
     });
 
-    https.createServer(app).listen(port + 1, () => {
-      console.log(`Listening (https) at port ${port + 1}`);
-    });
+    if (process.env.USE_HTTPS) {
+      if (!process.env.CERT_PATH) {
+        console.log('Cert path not found in environment variables');
+        throw new Error();
+      }
+
+      if (!process.env.KEY_PATH) {
+        console.log('Key path not found in environment variables');
+        throw new Error();
+      }
+
+      try {
+        const cert = fs.readFileSync(process.env.CERT_PATH, { encoding: 'utf-8' });
+        const key = fs.readFileSync(process.env.KEY_PATH, { encoding: 'utf-8' });
+
+        https.createServer({ cert, key }, app).listen(port + 1, () => {
+          console.log(`Listening (https) at port ${port + 1}`);
+        });
+      } catch (error) {
+        console.error(error);
+        throw error;
+      }
+    }
   } catch (error) {
     console.error('An error was thrown while starting. Exiting...');
   }
