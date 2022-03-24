@@ -7,7 +7,7 @@ import cookieParser from 'cookie-parser';
 
 import fs from 'fs';
 import https from 'https';
-import yargs from 'yargs/yargs';
+import yargs from 'yargs';
 
 import initDb from './database';
 import errorMiddleware from './middleware/error.middleware';
