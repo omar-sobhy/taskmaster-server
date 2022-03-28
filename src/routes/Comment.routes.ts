@@ -26,7 +26,9 @@ class CommentRoutes implements RouterWrapper {
     const { commentId } = req.query;
 
     if (!commentId) {
-      next(new CommentsNotFoundException([]));
+      res.json({
+        comments: [],
+      }).end();
       return;
     }
 

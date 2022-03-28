@@ -4,10 +4,11 @@ import {
 import mongoose from 'mongoose';
 import RouterWrapper from '../controllers/RouterWrapper.interface';
 import ProjectModel from '../database/Project/Project.model';
-import { createProject, createSections, getProjects } from '../database_functions/Project.database.functions';
+import {
+  createProject, createSections, createTag, getProjects,
+} from '../database_functions/Project.database.functions';
 import CreateProjectDto from '../dtos/Projects/CreateProject.dto';
 import ProjectNotFoundException from '../exceptions/projects/ProjectNotFoundException';
-import InvalidUsernameOrPassword from '../exceptions/users/InvalidUsernameOrPasswordException';
 import UserNotFoundException from '../exceptions/users/UserNotFoundException';
 import RequestWithUser from '../interfaces/RequestWithUser.interface';
 import authMiddleware from '../middleware/auth.middleware';
@@ -207,23 +208,15 @@ class ProjectRoutes implements RouterWrapper {
     const { projectId } = req.params;
     const { name } = req.body;
 
-    try {
-      const tag = await new TagModel({
-        name,
-        project: projectId,
-      }).save();
-
-      res.json({
-        tag: {
-          name: tag.name,
-          project: tag.project,
-          tasks: tag.tasks,
-          _id: tag._id,
-        },
-      }).end();
-    } catch (error) {
+    const tagOrError = await createTag(projectId, name);
+    if (tagOrError.type === 'error') {
       next(new ProjectNotFoundException(projectId));
+      return;
     }
+
+    res.json({
+      tag: tagOrError.data,
+    }).end();
   }
 }
 

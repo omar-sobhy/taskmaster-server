@@ -1,9 +1,12 @@
+import { TagSet } from 'mongodb';
 import Project from '../database/Project/Project.interface';
 import ProjectModel from '../database/Project/Project.model';
 import UserModel from '../database/User/User.model';
 import Section from '../database/Section/Section.interface';
 import SectionModel from '../database/Section/Section.model';
 import Result from '../interfaces/Result';
+import Tag from '../database/Tag/Tag.interface';
+import TagModel from '../database/Tag/Tag.model';
 
 async function getProjects(userId: string)
   : Promise<Result<Project[], 'USER_NOT_FOUND'>> {
@@ -102,6 +105,27 @@ async function createSections(
   };
 }
 
+async function createTag(projectId: string, name: string)
+  : Promise<Result<Tag, 'PROJECT_NOT_FOUND'>> {
+  const project = await ProjectModel.findById(projectId);
+  if (!project) {
+    return {
+      type: 'error',
+      errorType: 'PROJECT_NOT_FOUND',
+    };
+  }
+
+  const tag = await new TagModel({
+    name,
+    project: project._id,
+  }).save();
+
+  return {
+    type: 'success',
+    data: tag,
+  };
+}
+
 export {
-  createProject, getProjects, getSections, createSections,
+  createProject, getProjects, getSections, createSections, createTag,
 };
