@@ -46,7 +46,7 @@ async function start() {
   app.use(cors({
     origin: [
       'http://localhost:8080',
-      'https://omarsobhy.dev:8000',
+      'https://taskmaster.omarsobhy.dev',
     ],
     allowedHeaders: ['Authorization', 'Content-Type', 'Set-Cookie'],
     credentials: true,
