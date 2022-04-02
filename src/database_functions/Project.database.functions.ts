@@ -120,6 +120,9 @@ async function createTag(projectId: string, name: string)
     project: project._id,
   }).save();
 
+  project.tags.push(tag._id);
+  await project.save();
+
   return {
     type: 'success',
     data: tag,

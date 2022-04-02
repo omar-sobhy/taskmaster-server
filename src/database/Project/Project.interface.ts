@@ -8,6 +8,7 @@ interface Project {
 
   users: ObjectId[]
   sections: ObjectId[]
+  tags: ObjectId[]
 }
 
 export default Project;

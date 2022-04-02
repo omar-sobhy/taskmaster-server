@@ -14,6 +14,11 @@ const ProjectSchema = new mongoose.Schema({
     ref: 'Section',
     type: mongoose.Schema.Types.ObjectId,
   }],
+
+  tags: [{
+    ref: 'Tag',
+    type: mongoose.Schema.Types.ObjectId,
+  }],
 });
 
 const ProjectModel = mongoose.model<Project>('Project', ProjectSchema);

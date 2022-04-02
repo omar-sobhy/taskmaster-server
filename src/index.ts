@@ -17,12 +17,14 @@ import ProjectRoutes from './routes/Project.routes';
 import SectionRoutes from './routes/Section.routes';
 import TaskRoutes from './routes/Task.routes';
 import CommentRoutes from './routes/Comment.routes';
+import TagRoutes from './routes/Tag.routes';
 
 const routes = [new UserRoutes(),
   new ProjectRoutes(),
   new SectionRoutes(),
   new TaskRoutes(),
   new CommentRoutes(),
+  new TagRoutes(),
 ];
 
 async function start() {
