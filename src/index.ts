@@ -49,6 +49,7 @@ async function start() {
     origin: [
       'http://localhost:8080',
       'https://taskmaster.omarsobhy.dev',
+      'taskmaster.svitkona.xyz',
     ],
     allowedHeaders: ['Authorization', 'Content-Type', 'Set-Cookie'],
     credentials: true,
