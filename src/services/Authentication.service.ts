@@ -9,7 +9,7 @@ interface TokenData {
 
 class AuthenticationService {
   public static createCookie(tokenData: TokenData): string {
-    return `Authorization=${tokenData.token}; HttpOnly; Path='/'; Max-Age=${tokenData.expiresIn}; SameSite=None;`;
+    return `Authorization=${tokenData.token}; HttpOnly; Path='/'; Max-Age=${tokenData.expiresIn};`;
   }
 
   public static createToken(user: User): TokenData {

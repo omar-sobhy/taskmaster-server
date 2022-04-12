@@ -42,7 +42,9 @@ class UserRoutes implements RouterWrapper {
       } else {
         const tokenData = await AuthenticationService.createToken(user);
 
-        res.cookie('Authorization', tokenData.token);
+        res.cookie('Authorization', tokenData.token, {
+          sameSite: 'none',
+        });
 
         res.json({
           user: {
