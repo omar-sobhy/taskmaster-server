@@ -44,6 +44,7 @@ class UserRoutes implements RouterWrapper {
 
         res.cookie('Authorization', tokenData.token, {
           sameSite: 'none',
+          secure: true,
         });
 
         res.json({
