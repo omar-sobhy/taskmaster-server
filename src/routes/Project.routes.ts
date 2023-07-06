@@ -46,7 +46,7 @@ class ProjectRoutes implements RouterWrapper {
     this.router.get(`${this.path}/:projectId/tags`, ProjectRoutes.getTags);
 
     this.router.post(
-      `${this.path}/:projectId/sections/create`,
+      `${this.path}/:projectId/sections`,
       validationMiddleware(CreateSectionsDto),
       ProjectRoutes.createSections,
     );
@@ -144,7 +144,7 @@ class ProjectRoutes implements RouterWrapper {
   private static async createSections(req: Request, res: Response, next: NextFunction) {
     const { projectId } = req.params;
 
-    const { sectionData } = req.body;
+    const { sections: sectionData } = req.body;
 
     const sectionsOrError = await createSections(projectId, sectionData);
     if (sectionsOrError.type === 'error') {

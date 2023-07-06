@@ -37,6 +37,8 @@ class SectionRoutes implements Controller {
       SectionRoutes.getTasks,
     );
 
+    this.router.post(`${this.path}`, SectionRoutes.createSection);
+
     this.router.post(
       `${this.path}/:sectionId/tasks`,
       validationMiddleware(CreateTaskDto),
@@ -153,6 +155,25 @@ class SectionRoutes implements Controller {
     res.json({
       task,
     }).end();
+  }
+
+  private static async createSection(req: Request, res: Response, next: NextFunction) {
+    const { projectId } = req.params;
+    const { name = '', colour = '', icon = '' } = req.body;
+
+    const sections = await createSections(projectId, [{
+      name,
+      colour,
+      icon,
+    }]);
+
+    if (!sections) {
+      next(new ProjectNotFoundException(projectId));
+    } else {
+      res.json({
+        section: sections[0],
+      }).end();
+    }
   }
 }
 

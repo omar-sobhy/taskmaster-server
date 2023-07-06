@@ -6,7 +6,7 @@ class CreateSectionsDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateSectionDataDto)
-  public sectionData!: CreateSectionsDto[];
+  public sections!: CreateSectionDataDto[];
 }
 
 export default CreateSectionsDto;
