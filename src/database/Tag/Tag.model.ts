@@ -14,6 +14,8 @@ const TagSchema = new mongoose.Schema({
     ref: 'Task',
     type: ObjectId,
   }],
+
+  colour: String,
 });
 
 const TagModel = mongoose.model<Tag>('Tag', TagSchema);

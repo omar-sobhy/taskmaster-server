@@ -1,14 +1,16 @@
-import { ObjectId } from 'mongoose';
-import * as mongoose from 'mongoose';
+import { ObjectId } from "mongoose";
+import * as mongoose from "mongoose";
 
 interface Tag {
-  _id: ObjectId
+  _id: ObjectId;
 
-  name: string
+  name: string;
 
-  project: mongoose.Types.ObjectId
+  project: mongoose.Types.ObjectId;
 
-  tasks: mongoose.Types.ObjectId[]
+  tasks: mongoose.Types.ObjectId[];
+
+  colour: string;
 }
 
 export default Tag;

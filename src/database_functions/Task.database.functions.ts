@@ -8,6 +8,7 @@ import TaskModel from '../database/Task/Task.model';
 import Result from '../interfaces/Result';
 import Comment from '../database/Comment/Comment.interface';
 import CommentModel from '../database/Comment/Comment.model';
+import TagModel from '../database/Tag/Tag.model';
 
 async function getTaskData(taskId: string): Promise<Result<Task, 'TASK_NOT_FOUND'>> {
   try {
@@ -59,10 +60,10 @@ async function getTasks(sectionId: string)
 }
 
 async function updateTask(taskId: string, {
-  name, dueDate, assignee, description,
+  name, dueDate, assignee, description, tagIds,
 }:
-{ name?: string, assignee?: string, dueDate?: string, description?: string })
-  : Promise<Result<Task, 'TASK_NOT_FOUND' | 'ASSIGNEE_NOT_IN_PROJECT'>> {
+{ name?: string, assignee?: string, dueDate?: string, description?: string, tagIds?: string[] })
+  : Promise<Result<Task, 'TASK_NOT_FOUND' | 'ASSIGNEE_NOT_IN_PROJECT' | 'TAG_NOT_FOUND'>> {
   try {
     const task = await TaskModel.findById(taskId, '-__v');
     if (!task) {
@@ -77,6 +78,30 @@ async function updateTask(taskId: string, {
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const project = (await ProjectModel.findById(section.project))!;
+
+    if (tagIds) {
+      const tags = await Promise.all(tagIds.map((t) => TagModel.findById(t)));
+
+      const invalidTag = tags.find((t) => {
+        if (!t) return true;
+
+        if (t.project._id.toString() !== project.id) {
+          console.log(`Tried to assign tag ${t.id} to non-parent project ${project.id}.`);
+          return true;
+        }
+      });
+
+      if (invalidTag) {
+        return {
+          type: 'error',
+          errorType: 'TAG_NOT_FOUND',
+          errorData: invalidTag.id,
+        }
+      }
+
+      // @ts-ignore
+      task.tags = tags as mongoose.ObjectId;
+    }
 
     if (name) task.name = name;
 

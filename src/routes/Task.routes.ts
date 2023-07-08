@@ -80,11 +80,13 @@ class TaskRoutes implements RouterWrapper {
   private static async updateTask(req: Request, res: Response, next: NextFunction) {
     const { taskId } = req.params;
     const {
-      name, assignee, dueDate, description,
+      name, assignee, dueDate, description, tags: tagIds,
     } = req.body;
 
+    console.log(dueDate);
+    
     const taskOrError = await updateTask(taskId, {
-      name, assignee, dueDate, description,
+      name, assignee, dueDate, description, tagIds,
     });
 
     if (taskOrError.type === 'error') {
