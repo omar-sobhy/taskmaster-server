@@ -1,3 +1,4 @@
+import Project from '../database/Project/Project.interface';
 import ProjectModel from '../database/Project/Project.model';
 import Section from '../database/Section/Section.interface';
 import SectionModel from '../database/Section/Section.model';
@@ -7,7 +8,7 @@ import Result from '../interfaces/Result';
 
 async function createSections(
   projectId: string,
-  sectionData: [{ name: string, colour: string, icon: string }],
+  sectionData: [{ name: string; colour: string; icon: string }],
 ): Promise<Result<Section[], 'PROJECT_NOT_FOUND'>> {
   const project = await ProjectModel.findById(projectId);
   if (!project) {
@@ -17,12 +18,14 @@ async function createSections(
     };
   }
 
-  const sections = sectionData.map(({ name, colour, icon }) => new SectionModel({
-    name,
-    colour,
-    icon,
-    project: project.id,
-  }));
+  const sections = sectionData.map(
+    ({ name, colour, icon }) => new SectionModel({
+      name,
+      colour,
+      icon,
+      project: project.id,
+    }),
+  );
 
   return {
     type: 'success',
@@ -30,8 +33,9 @@ async function createSections(
   };
 }
 
-async function getSections(projectId: string)
-  : Promise<Result<Section[], 'PROJECT_NOT_FOUND'>> {
+async function getSections(
+  projectId: string,
+): Promise<Result<Section[], 'PROJECT_NOT_FOUND'>> {
   try {
     const project = await ProjectModel.findById(projectId);
     if (!project) {
@@ -41,7 +45,10 @@ async function getSections(projectId: string)
       };
     }
 
-    const populatedProject = await project.populate<{ sections: Section[] }>('sections', '-__v');
+    const populatedProject = await project.populate<{ sections: Section[] }>(
+      'sections',
+      '-__v',
+    );
 
     const { sections } = populatedProject;
 
@@ -145,6 +152,40 @@ async function createTask(
       errorType: 'SECTION_NOT_FOUND',
     };
   }
+}
+
+async function deleteSection(
+  sectionId: string,
+  userId: string,
+): Promise<Result<Section, 'SECTION_NOT_FOUND'>> {
+  const section = await SectionModel.findById(sectionId);
+
+  if (!section) {
+    return {
+      type: 'error',
+      errorType: 'SECTION_NOT_FOUND',
+      errorData: sectionId,
+    };
+  }
+
+  const populatedUser = await section.populate<{ project: Project }>('project');
+
+  const { project } = populatedUser;
+
+  if (!project.users.find((id) => id.toString() === userId)) {
+    console.log(
+      `User '${userId}' tried removing section '${sectionId}' without permission`,
+    );
+
+    return {
+      type: 'error',
+      errorT,
+    };
+  }
+  return {
+    type: 'success',
+    data: section,
+  };
 }
 
 export {

@@ -1,6 +1,8 @@
-import { Type } from "class-transformer";
-import { IsArray, IsOptional, IsString, Length } from "class-validator";
-import CreateSectionDataDto from "../Sections/CreateSectionData.dto";
+import { Type } from 'class-transformer';
+import {
+  IsArray, IsOptional, IsString, Length,
+} from 'class-validator';
+import CreateSectionDataDto from '../Sections/CreateSectionData.dto';
 
 class CreateProjectDto {
   @IsString()

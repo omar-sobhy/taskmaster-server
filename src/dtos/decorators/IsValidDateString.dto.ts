@@ -1,25 +1,21 @@
-import {
-  ValidationArguments,
-  ValidationOptions,
-  registerDecorator,
-} from "class-validator";
+import { ValidationArguments, registerDecorator } from 'class-validator';
 
-export function IsValidDateString() {
-  return function (object: Object, propertyName: string) {
+export default function IsValidDateString() {
+  return function (object: object, propertyName: string) {
     registerDecorator({
-      name: "isValidDateString",
+      name: 'isValidDateString',
       target: object.constructor,
       propertyName,
       options: {
-        message: "$value is an invalid Date String",
+        message: '$value is an invalid Date String',
       },
       validator: {
         validate(value: any, args: ValidationArguments) {
-          if (typeof value !== "string") {
+          if (typeof value !== 'string') {
             return false;
           }
 
-          const data = value.split("-");
+          const data = value.split('-');
 
           if (data.length !== 3) {
             return false;

@@ -52,4 +52,8 @@ async function createTask(
   }
 }
 
-export { createTask };
+async function deleteTask(_userId: string, _taksId: string) {
+  // TODO
+}
+
+export { createTask, deleteTask };

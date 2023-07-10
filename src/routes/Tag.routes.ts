@@ -2,10 +2,16 @@ import {
   NextFunction, Request, Response, Router,
 } from 'express';
 import RouterWrapper from '../controllers/RouterWrapper.interface';
-import { getTagData } from '../database_functions/Tag.database.functions';
+import {
+  deleteTag,
+  getTagData,
+  updateTag,
+} from '../database_functions/Tag.database.functions';
 import TagsNotFoundException from '../exceptions/tags/TagsNotFoundException';
 import authMiddleware from '../middleware/auth.middleware';
-import { updateTag } from '../database_functions/Tag.database.functions';
+import RequestWithUser from '../interfaces/RequestWithUser.interface';
+import validationMiddleware from '../middleware/validation.middleware';
+import UpdateTagDto from '../dtos/Tags/UpdateTag.dto';
 
 class TagRoutes implements RouterWrapper {
   public path = '/tags';
@@ -22,15 +28,27 @@ class TagRoutes implements RouterWrapper {
 
     this.router.get(`${this.path}`, TagRoutes.getTagData);
 
-    this.router.post(`${this.path}/:tagId`, TagRoutes.updateTagName);
+    this.router.post(
+      `${this.path}/:tagId`,
+      validationMiddleware(UpdateTagDto),
+      TagRoutes.updateTag,
+    );
+
+    this.router.delete(`${this.path}/:tagId`, TagRoutes.deleteTag);
   }
 
-  private static async getTagData(req: Request, res: Response, next: NextFunction) {
+  private static async getTagData(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
     const { tagId } = req.query;
     if (!tagId) {
-      res.json({
-        tags: [],
-      }).end();
+      res
+        .json({
+          tags: [],
+        })
+        .end();
       return;
     }
 
@@ -45,30 +63,65 @@ class TagRoutes implements RouterWrapper {
 
     const tags = tagsOrError.data;
 
-    res.json({
-      tags,
-    }).end();
+    res
+      .json({
+        tags,
+      })
+      .end();
   }
 
-  private static async updateTagName(req: Request, res: Response, next: NextFunction) {
+  private static async updateTag(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
     const { tagId } = req.params;
-    const { name } = req.body;
-    
+    const { colour, name } = req.body;
+
     if (!tagId) {
-      next(new TagsNotFoundException([tagId]));
+      next(new TagsNotFoundException(['undefined']));
       return;
     }
 
-    const tagOrError = await updateTag(tagId, name);
+    const tagOrError = await updateTag(tagId, { colour, name });
 
     if (tagOrError.type === 'error') {
       next(new TagsNotFoundException([tagOrError.errorData as string]));
       return;
     }
 
-    res.json({
-      tag: tagOrError.data,
-    }).end();
+    res
+      .json({
+        tag: tagOrError.data,
+      })
+      .end();
+  }
+
+  private static async deleteTag(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    const { tagId } = req.params;
+    if (!tagId) {
+      next(new TagsNotFoundException(['undefined']));
+      return;
+    }
+
+    const { user } = req as RequestWithUser;
+
+    const tagOrError = await deleteTag(tagId, user._id.toString());
+
+    if (tagOrError.type === 'error') {
+      next(new TagsNotFoundException([tagOrError.errorData as string]));
+      return;
+    }
+
+    res
+      .json({
+        tag: tagOrError.data,
+      })
+      .end();
   }
 }
 

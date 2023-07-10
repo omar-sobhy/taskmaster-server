@@ -1,3 +1,4 @@
+import mongoose, { Mongoose, Schema } from 'mongoose';
 import Project from '../database/Project/Project.interface';
 import ProjectModel from '../database/Project/Project.model';
 import UserModel from '../database/User/User.model';
@@ -6,7 +7,6 @@ import SectionModel from '../database/Section/Section.model';
 import Result from '../interfaces/Result';
 import Tag from '../database/Tag/Tag.interface';
 import TagModel from '../database/Tag/Tag.model';
-import mongoose, { Mongoose, Schema } from 'mongoose';
 
 async function getProjects(userId: string)
   : Promise<Result<Project[], 'USER_NOT_FOUND'>> {

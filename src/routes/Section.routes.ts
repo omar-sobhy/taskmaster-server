@@ -51,6 +51,12 @@ class SectionRoutes implements Controller {
       SectionRoutes.updateSection,
     );
 
+    this.router.delete(
+      `${this.path}/:sectionId`,
+      validationMiddleware(DeleteSectionDto),
+      SectionRoutes.deleteSection,
+    );
+
     this.router.all(`${this.path}`, authMiddleware);
     this.router.all(`${this.path}/*`, authMiddleware);
   }
@@ -174,6 +180,10 @@ class SectionRoutes implements Controller {
         section: sections[0],
       }).end();
     }
+  }
+
+  private static async deleteSection(req: Request, res: Response, next: NextFunction) {
+    const { sectionId } = req.params;
   }
 }
 

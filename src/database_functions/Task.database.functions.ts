@@ -89,6 +89,8 @@ async function updateTask(taskId: string, {
           console.log(`Tried to assign tag ${t.id} to non-parent project ${project.id}.`);
           return true;
         }
+
+        return false;
       });
 
       if (invalidTag) {
@@ -96,9 +98,10 @@ async function updateTask(taskId: string, {
           type: 'error',
           errorType: 'TAG_NOT_FOUND',
           errorData: invalidTag.id,
-        }
+        };
       }
 
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       task.tags = tags as mongoose.ObjectId;
     }

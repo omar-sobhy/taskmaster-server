@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { ObjectId, Types } from 'mongoose';
 
 enum TaskStatus {
   IN_PROGRESS,
@@ -8,20 +8,22 @@ enum TaskStatus {
 }
 
 interface Task {
-  name: string
-  description: string
-  status: TaskStatus
-  dueDate: Date
+  _id: ObjectId;
 
-  created: Date
-  updated: Date
+  name: string;
+  description: string;
+  status: TaskStatus;
+  dueDate: Date;
 
-  section: Types.ObjectId
-  assignee?: Types.ObjectId
-  watchers: Types.ObjectId[]
-  checklistItems: Types.ObjectId[]
-  comments: Types.ObjectId[]
-  tags: Types.ObjectId[]
+  created: Date;
+  updated: Date;
+
+  section: Types.ObjectId;
+  assignee?: Types.ObjectId;
+  watchers: Types.ObjectId[];
+  checklistItems: Types.ObjectId[];
+  comments: Types.ObjectId[];
+  tags: Types.ObjectId[];
 }
 
 export { TaskStatus };

@@ -1,5 +1,5 @@
-import { ObjectId } from "mongoose";
-import * as mongoose from "mongoose";
+import { ObjectId } from 'mongoose';
+import * as mongoose from 'mongoose';
 
 interface Tag {
   _id: ObjectId;
