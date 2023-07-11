@@ -32,9 +32,40 @@ async function getTaskData(taskId: string): Promise<Result<Task, 'TASK_NOT_FOUND
   }
 }
 
-async function getTasks(sectionId: string)
-  : Promise<Result<Task[], 'SECTION_NOT_FOUND'>> {
+async function getTasks(
+  userId: string,
+  sectionId?: string,
+): Promise<Result<Task[], 'SECTION_NOT_FOUND'>> {
   try {
+    if (!sectionId) {
+      const projects = await ProjectModel.where({
+        users: [
+          {
+            _id: userId,
+          },
+        ],
+      }).exec();
+
+      const sectionIds = projects.flatMap((p) => p.sections);
+
+      const sectionModels = await Promise.all(
+        sectionIds.map(async (s) => SectionModel.findById(s)),
+      );
+
+      const taskIds = sectionModels
+        .flatMap((s) => s?.tasks)
+        .filter((t) => !!t) as mongoose.ObjectId[];
+
+      const taskModels = (
+        await Promise.all(taskIds.map((t) => TaskModel.findById(t, '-__v')))
+      ).filter((t) => t?.assignee?.toString() === userId);
+
+      return {
+        type: 'success',
+        data: taskModels as Task[],
+      };
+    }
+
     const section = await SectionModel.findById(sectionId, '-__v');
     if (!section) {
       return {
@@ -49,7 +80,7 @@ async function getTasks(sectionId: string)
 
     return {
       type: 'success',
-      data: await Promise.all(promises) as Task[],
+      data: (await Promise.all(promises)) as Task[],
     };
   } catch (error) {
     return {
@@ -59,11 +90,16 @@ async function getTasks(sectionId: string)
   }
 }
 
-async function updateTask(taskId: string, {
-  name, dueDate, assignee, description, tagIds,
-}:
-{ name?: string, assignee?: string, dueDate?: string, description?: string, tagIds?: string[] })
-  : Promise<Result<Task, 'TASK_NOT_FOUND' | 'ASSIGNEE_NOT_IN_PROJECT' | 'TAG_NOT_FOUND'>> {
+async function updateTask(
+  taskId: string,
+  {
+    name,
+    dueDate,
+    assignee,
+    description,
+    tagIds,
+  }: { name?: string; assignee?: string; dueDate?: string; description?: string; tagIds?: string[] },
+): Promise<Result<Task, 'TASK_NOT_FOUND' | 'ASSIGNEE_NOT_IN_PROJECT' | 'TAG_NOT_FOUND'>> {
   try {
     const task = await TaskModel.findById(taskId, '-__v');
     if (!task) {
@@ -169,8 +205,11 @@ async function deleteTask(taskId: string): Promise<Result<Task, 'TASK_NOT_FOUND'
   }
 }
 
-async function createComment(taskId: string, comment: string, owner: string)
-  : Promise<Result<Comment, 'TASK_NOT_FOUND'>> {
+async function createComment(
+  taskId: string,
+  comment: string,
+  owner: string,
+): Promise<Result<Comment, 'TASK_NOT_FOUND'>> {
   try {
     const task = await TaskModel.findById(taskId);
     if (!task) {

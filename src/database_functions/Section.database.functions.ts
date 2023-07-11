@@ -33,6 +33,56 @@ async function createSections(
   };
 }
 
+async function getSection(
+  userId: string,
+  sectionId: string,
+): Promise<Result<Section, 'SECTION_NOT_FOUND'>> {
+  try {
+    const section = await SectionModel.findById(sectionId);
+
+    if (!section) {
+      return {
+        type: 'error',
+        errorType: 'SECTION_NOT_FOUND',
+        errorData: sectionId,
+      };
+    }
+
+    const project = await ProjectModel.findById(section.project);
+
+    if (!project) {
+      console.error(
+        `User ${userId} attempted to get section ${sectionId} but no parent project was found.`,
+      );
+      return {
+        type: 'error',
+        errorType: 'SECTION_NOT_FOUND',
+        errorData: sectionId,
+      };
+    }
+
+    if (!project.users.find((u) => u.toString() === userId)) {
+      console.log(`User ${userId} tried to get section ${sectionId} without permission.`);
+      return {
+        type: 'error',
+        errorType: 'SECTION_NOT_FOUND',
+        errorData: sectionId,
+      };
+    }
+
+    return {
+      type: 'success',
+      data: section,
+    };
+  } catch (error) {
+    return {
+      type: 'error',
+      errorType: 'SECTION_NOT_FOUND',
+      errorData: sectionId,
+    };
+  }
+}
+
 async function getSections(projectId: string): Promise<Result<Section[], 'PROJECT_NOT_FOUND'>> {
   try {
     const project = await ProjectModel.findById(projectId);
@@ -198,5 +248,5 @@ async function deleteSection(
 }
 
 export {
-  createSections, createTask, getSections, updateSection, deleteSection,
+  createSections, createTask, getSection, getSections, updateSection, deleteSection,
 };

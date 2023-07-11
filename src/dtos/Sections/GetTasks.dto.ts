@@ -1,7 +1,8 @@
-import { IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 class GetTasksDto {
   @IsString()
+  @IsOptional()
   public sectionId!: string;
 }
 

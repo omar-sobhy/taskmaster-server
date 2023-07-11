@@ -63,7 +63,9 @@ class TaskRoutes implements RouterWrapper {
   private static async getTasks(req: Request, res: Response, next: NextFunction) {
     const { sectionId } = req.body;
 
-    const tasksOrError = await getTasks(sectionId);
+    const { user } = req as RequestWithUser;
+
+    const tasksOrError = await getTasks(user._id.toString());
 
     if (tasksOrError.type === 'error') {
       next(new SectionNotFoundException(sectionId));

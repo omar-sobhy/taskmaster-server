@@ -3,7 +3,6 @@ import {
 } from 'express';
 import Controller from '../controllers/RouterWrapper.interface';
 import { createSections } from '../controllers/Project.controllers';
-import CreateSectionsDto from '../dtos/Sections/CreateSections.dto';
 import UpdateSectionDto from '../dtos/Sections/UpdateSection.dto';
 import ProjectNotFoundException from '../exceptions/projects/ProjectNotFoundException';
 import SectionNotFoundException from '../exceptions/sections/SectionNotFoundException';
@@ -11,16 +10,15 @@ import validationMiddleware from '../middleware/validation.middleware';
 import {
   createTask,
   deleteSection,
+  getSection,
   getSections,
   updateSection,
 } from '../database_functions/Section.database.functions';
 import AssigneeNotInProjectException from '../exceptions/projects/AssigneeNotInProjectException';
 import CreateTaskDto from '../dtos/Sections/CreateTask.dto';
 import { getTasks } from '../database_functions/Task.database.functions';
-import GetTasksDto from '../dtos/Sections/GetTasks.dto';
 import authMiddleware from '../middleware/auth.middleware';
 import RequestWithUser from '../interfaces/RequestWithUser.interface';
-import DeleteSectionDto from '../dtos/Sections/DeleteSectionDto.dto';
 
 class SectionRoutes implements Controller {
   public path = '/sections';
@@ -64,7 +62,9 @@ class SectionRoutes implements Controller {
   private static async getTasks(req: Request, res: Response, next: NextFunction) {
     const { sectionId } = req.params;
 
-    const tasksOrError = await getTasks(sectionId);
+    const { user } = req as RequestWithUser;
+
+    const tasksOrError = await getTasks(user._id.toString(), sectionId);
 
     if (tasksOrError.type === 'error') {
       next(new SectionNotFoundException(sectionId));
@@ -81,26 +81,21 @@ class SectionRoutes implements Controller {
   }
 
   private static async getSection(req: Request, res: Response, next: NextFunction) {
-    const { projectId, sectionId } = req.params;
+    const { sectionId } = req.params;
 
-    const sectionsOrError = await getSections(projectId);
+    const { user } = req as RequestWithUser;
+
+    const sectionsOrError = await getSection(user._id.toString(), sectionId);
     if (sectionsOrError.type === 'error') {
-      next(new ProjectNotFoundException(projectId));
+      next(new SectionNotFoundException(sectionId));
       return;
     }
 
-    const sections = sectionsOrError.data;
-
-    const section = sections.find((s) => s._id.toString() === sectionId);
-    if (!section) {
-      next(new SectionNotFoundException(sectionId));
-    } else {
-      res
-        .json({
-          section,
-        })
-        .end();
-    }
+    res
+      .json({
+        section: sectionsOrError.data,
+      })
+      .end();
   }
 
   private static async getSections(req: Request, res: Response, next: NextFunction) {

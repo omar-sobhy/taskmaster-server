@@ -41,14 +41,14 @@ async function getSections(projectId: string): Promise<Section[] | null> {
     return null;
   }
 
-  const populatedProject = await project.populate< { sections: Section[] }>('sections');
+  const populatedProject = await project.populate<{ sections: Section[] }>('sections');
 
   return populatedProject.sections;
 }
 
 async function createSections(
   projectId: string,
-  sectionData: [{ name: string, colour: string, icon: string }],
+  sectionData: [{ name: string; colour: string; icon: string }],
 ): Promise<Section[] | null> {
   const project = await ProjectModel.findById(projectId);
   if (!project) {
@@ -66,6 +66,8 @@ async function createSections(
 
   const ids = allPromise.map((s) => s._id.toString());
 
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   project.sections.concat(ids);
   project.sections = allPromise.map((s) => s._id);
 

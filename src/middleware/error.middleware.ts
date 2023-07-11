@@ -8,7 +8,6 @@ function errorMiddleware(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _next: NextFunction,
 ) {
-  console.log(1);
   const status = error.status || 500;
   const message = error.message || 'Something went wrong';
   response
