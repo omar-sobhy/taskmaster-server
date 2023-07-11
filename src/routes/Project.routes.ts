@@ -106,7 +106,7 @@ class ProjectRoutes implements RouterWrapper {
     },
     {
       name: 'On hold',
-      colour: '#fff0a1',
+      colour: '#2ed7d8',
       icon: '',
       project: projectId,
     }];
