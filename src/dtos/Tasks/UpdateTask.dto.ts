@@ -1,5 +1,5 @@
 import { IsOptional, IsString } from 'class-validator';
-import { IsValidDateString } from '../decorators/IsValidDateString.dto';
+import IsValidDateString from '../decorators/IsValidDateString.dto';
 
 class UpdateTaskDto {
   @IsString()

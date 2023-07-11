@@ -1,5 +1,5 @@
 import { IsOptional, IsString } from 'class-validator';
-import { IsValidRgbString } from '../decorators/IsValidRgbString.dto';
+import IsValidRgbString from '../decorators/IsValidRgbString.dto';
 
 class UpdateTagDto {
   @IsString()

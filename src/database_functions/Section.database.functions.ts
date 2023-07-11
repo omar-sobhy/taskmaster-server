@@ -33,9 +33,7 @@ async function createSections(
   };
 }
 
-async function getSections(
-  projectId: string,
-): Promise<Result<Section[], 'PROJECT_NOT_FOUND'>> {
+async function getSections(projectId: string): Promise<Result<Section[], 'PROJECT_NOT_FOUND'>> {
   try {
     const project = await ProjectModel.findById(projectId);
     if (!project) {
@@ -45,10 +43,7 @@ async function getSections(
       };
     }
 
-    const populatedProject = await project.populate<{ sections: Section[] }>(
-      'sections',
-      '-__v',
-    );
+    const populatedProject = await project.populate<{ sections: Section[] }>('sections', '-__v');
 
     const { sections } = populatedProject;
 
@@ -168,20 +163,34 @@ async function deleteSection(
     };
   }
 
-  const populatedUser = await section.populate<{ project: Project }>('project');
+  const populatedSection = await section.populate<{ project: Project; tasks: Task[] }>(
+    'project tasks',
+  );
 
-  const { project } = populatedUser;
+  const { project, tasks } = populatedSection;
 
   if (!project.users.find((id) => id.toString() === userId)) {
-    console.log(
-      `User '${userId}' tried removing section '${sectionId}' without permission`,
-    );
+    console.log(`User '${userId}' tried removing section '${sectionId}' without permission`);
 
     return {
       type: 'error',
-      errorT,
+      errorType: 'SECTION_NOT_FOUND',
+      errorData: sectionId,
     };
   }
+
+  tasks.forEach(async (task) => {
+    const model = new TaskModel(task._id);
+    await model.delete();
+  });
+
+  await section.delete();
+
+  const model = new ProjectModel(project._id);
+  const idx = model.sections.findIndex((id) => id.toString() === sectionId);
+  model.sections.splice(idx, 1);
+  await model.save();
+
   return {
     type: 'success',
     data: section,
@@ -189,5 +198,5 @@ async function deleteSection(
 }
 
 export {
-  createSections, createTask, getSections, updateSection,
+  createSections, createTask, getSections, updateSection, deleteSection,
 };

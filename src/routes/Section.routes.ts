@@ -8,12 +8,19 @@ import UpdateSectionDto from '../dtos/Sections/UpdateSection.dto';
 import ProjectNotFoundException from '../exceptions/projects/ProjectNotFoundException';
 import SectionNotFoundException from '../exceptions/sections/SectionNotFoundException';
 import validationMiddleware from '../middleware/validation.middleware';
-import { createTask, getSections, updateSection } from '../database_functions/Section.database.functions';
+import {
+  createTask,
+  deleteSection,
+  getSections,
+  updateSection,
+} from '../database_functions/Section.database.functions';
 import AssigneeNotInProjectException from '../exceptions/projects/AssigneeNotInProjectException';
 import CreateTaskDto from '../dtos/Sections/CreateTask.dto';
 import { getTasks } from '../database_functions/Task.database.functions';
 import GetTasksDto from '../dtos/Sections/GetTasks.dto';
 import authMiddleware from '../middleware/auth.middleware';
+import RequestWithUser from '../interfaces/RequestWithUser.interface';
+import DeleteSectionDto from '../dtos/Sections/DeleteSectionDto.dto';
 
 class SectionRoutes implements Controller {
   public path = '/sections';
@@ -32,10 +39,7 @@ class SectionRoutes implements Controller {
 
     this.router.get(`${this.path}/:sectionId`, SectionRoutes.getSection);
 
-    this.router.get(
-      `${this.path}/:sectionId/tasks`,
-      SectionRoutes.getTasks,
-    );
+    this.router.get(`${this.path}/:sectionId/tasks`, SectionRoutes.getTasks);
 
     this.router.post(`${this.path}`, SectionRoutes.createSection);
 
@@ -51,11 +55,7 @@ class SectionRoutes implements Controller {
       SectionRoutes.updateSection,
     );
 
-    this.router.delete(
-      `${this.path}/:sectionId`,
-      validationMiddleware(DeleteSectionDto),
-      SectionRoutes.deleteSection,
-    );
+    this.router.delete(`${this.path}/:sectionId`, SectionRoutes.deleteSection);
 
     this.router.all(`${this.path}`, authMiddleware);
     this.router.all(`${this.path}/*`, authMiddleware);
@@ -73,9 +73,11 @@ class SectionRoutes implements Controller {
 
     const tasks = tasksOrError.data;
 
-    res.json({
-      tasks,
-    }).end();
+    res
+      .json({
+        tasks,
+      })
+      .end();
   }
 
   private static async getSection(req: Request, res: Response, next: NextFunction) {
@@ -93,9 +95,11 @@ class SectionRoutes implements Controller {
     if (!section) {
       next(new SectionNotFoundException(sectionId));
     } else {
-      res.json({
-        section,
-      }).end();
+      res
+        .json({
+          section,
+        })
+        .end();
     }
   }
 
@@ -110,9 +114,11 @@ class SectionRoutes implements Controller {
 
     const sections = sectionsOrError.data;
 
-    res.json({
-      sections,
-    }).end();
+    res
+      .json({
+        sections,
+      })
+      .end();
   }
 
   private static async updateSection(req: Request, res: Response, next: NextFunction) {
@@ -128,9 +134,11 @@ class SectionRoutes implements Controller {
 
     const section = sectionOrError.data;
 
-    res.json({
-      section,
-    }).end();
+    res
+      .json({
+        section,
+      })
+      .end();
   }
 
   private static async createTask(req: Request, res: Response, next: NextFunction) {
@@ -140,8 +148,7 @@ class SectionRoutes implements Controller {
     const taskOrError = await createTask(
       sectionId,
       name,
-      dueDate ? new Date(dueDate)
-        : undefined,
+      dueDate ? new Date(dueDate) : undefined,
       assignee,
     );
 
@@ -158,32 +165,52 @@ class SectionRoutes implements Controller {
 
     const task = taskOrError.data;
 
-    res.json({
-      task,
-    }).end();
+    res
+      .json({
+        task,
+      })
+      .end();
   }
 
   private static async createSection(req: Request, res: Response, next: NextFunction) {
     const { projectId } = req.params;
     const { name = '', colour = '', icon = '' } = req.body;
 
-    const sections = await createSections(projectId, [{
-      name,
-      colour,
-      icon,
-    }]);
+    const sections = await createSections(projectId, [
+      {
+        name,
+        colour,
+        icon,
+      },
+    ]);
 
     if (!sections) {
       next(new ProjectNotFoundException(projectId));
     } else {
-      res.json({
-        section: sections[0],
-      }).end();
+      res
+        .json({
+          section: sections[0],
+        })
+        .end();
     }
   }
 
   private static async deleteSection(req: Request, res: Response, next: NextFunction) {
     const { sectionId } = req.params;
+
+    const { user } = req as RequestWithUser;
+
+    const result = await deleteSection(sectionId, user._id.toString());
+
+    if (result.type === 'error') {
+      next(new SectionNotFoundException(sectionId));
+    } else {
+      res
+        .json({
+          section: result.data,
+        })
+        .end();
+    }
   }
 }
 
