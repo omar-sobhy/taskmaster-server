@@ -1,5 +1,5 @@
 FROM node:current-alpine
-WORKDIR /
+WORKDIR /taskmaster/app
 COPY . .
 RUN npm install
 RUN npm run build

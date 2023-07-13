@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "start": "node ./build/index.js --mode=prod",
-    "dev": "node ./build/index.js --mode=dev"
+    "dev": "nodemon src/index.ts --mode=dev"
   },
   "author": "",
   "license": "ISC",
@@ -27,6 +27,7 @@
     "jsonwebtoken": "^8.5.1",
     "mongodb": "^4.2.0",
     "mongoose": "^6.0.13",
+    "nodemon": "^3.0.1",
     "reflect-metadata": "^0.1.13",
     "yargs": "^17.4.0"
   },

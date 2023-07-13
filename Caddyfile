@@ -1,0 +1,17 @@
+https://taskmaster.omarsobhy.dev/api/* {
+	handle_path /api/* {
+		log
+
+		reverse_proxy https://localhost:3001 {
+			header_up Host {$upstream_hostport}
+		}
+	}
+}
+
+https://taskmaster.svitkona.xyz/api/* {
+	handle_path /api/* {
+		reverse_proxy https://localhost:3001 {
+			header_up Host {$upstream_hostport}
+		}
+	}
+}

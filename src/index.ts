@@ -62,6 +62,11 @@ async function start() {
     }),
   );
 
+  app.get('/api', (req, res) => {
+    res.write('hello, world');
+    res.end();
+  });
+
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   app.use(loggerMiddleware);
