@@ -44,8 +44,6 @@ class TaskRoutes implements RouterWrapper {
       name, assignee, dueDate, description, tags,
     } = req.body;
 
-    console.log(dueDate);
-
     const taskOrError = await updateTask(taskId, {
       name,
       assignee,
