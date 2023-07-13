@@ -1,0 +1,40 @@
+services:
+  mongodb:
+    image: mongo:6.0.7
+    restart: unless-stopped
+    volumes:
+      - mongodb:/data/db
+    ports:
+      - 27018:27018
+    networks:
+      - taskmaster-server
+  caddy:
+    image: caddy:2.6.4-alpine
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+      - 443:443/udp
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - taskmaster-server
+  taskmaster-server:
+    container_name: taskmaster-server-dev
+    restart: unless-stopped
+    command: sh -c "npm install && npm run build && npm run"
+    build:
+      context: https://github.com/omar-sobhy/taskmaster-server.git
+    env_file:
+      - .env.dev
+    ports:
+      - 3001
+    networks:
+      - taskmaster-server
+volumes:
+  caddy_data:
+  caddy_config:
+  mongodb:
+networks:
+  taskmaster-server:
