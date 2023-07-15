@@ -44,7 +44,8 @@ class UserRoutes implements RouterWrapper {
 
         res.cookie('Authorization', tokenData.token, {
           sameSite: 'none',
-          secure: true,
+          // secure: true,
+          path: '/',
         });
 
         res.json({
@@ -97,19 +98,21 @@ class UserRoutes implements RouterWrapper {
 
     const usersOrErrors = await getByIds(userIds);
     if (usersOrErrors.length === 0) {
-      res.json({
-        users: [],
-      }).end();
+      res
+        .json({
+          users: [],
+        })
+        .end();
     } else if (typeof usersOrErrors[0] === 'string') {
-      const message = usersOrErrors
-        .map((id) => `No user with id '${id}' found.`)
-        .join('\n');
+      const message = usersOrErrors.map((id) => `No user with id '${id}' found.`).join('\n');
 
       next(new HttpException(404, message));
     } else {
-      res.json({
-        users: usersOrErrors,
-      }).end();
+      res
+        .json({
+          users: usersOrErrors,
+        })
+        .end();
     }
   }
 }

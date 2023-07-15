@@ -1,4 +1,4 @@
-FROM node:current-alpine
+FROM node:current-slim
 WORKDIR /taskmaster/app
 COPY . .
 RUN npm install

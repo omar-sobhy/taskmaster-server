@@ -18,17 +18,19 @@ async function getById(userId: string | ObjectId): Promise<User | null> {
 }
 
 async function getByIds(userIds: string[] | ObjectId[]): Promise<User[] | string[]> {
-  const usersAndErrors = await Promise.all(userIds.map(async (id) => {
-    try {
-      const user = UserModel.findById(id, '-password -__v');
-      if (user === null) {
+  const usersAndErrors = await Promise.all(
+    userIds.map(async (id) => {
+      try {
+        const user = UserModel.findById(id, '-password -__v');
+        if (user === null) {
+          return id;
+        }
+        return await user;
+      } catch (error) {
         return id;
       }
-      return await user;
-    } catch (error) {
-      return id;
-    }
-  }));
+    }),
+  );
 
   const errors = usersAndErrors.filter((obj) => typeof obj === 'string') as string[];
   if (errors.length !== 0) {
@@ -58,13 +60,9 @@ async function login(username: string, password: string): Promise<User | null> {
   return user;
 }
 
-async function signUp(
-  username: string,
-  password: string,
-  email: string,
-): Promise<User | null> {
+async function signUp(username: string, password: string, email: string): Promise<User | null> {
   const existingUser = await UserModel.findOne({
-    username,
+    username: { $regex: new RegExp(username), $options: 'i' },
   });
 
   if (existingUser !== null) {
@@ -89,7 +87,7 @@ async function projects(id: string): Promise<Project[] | null> {
     return null;
   }
 
-  const populatedUser = await user.populate< { projects: Project[] }>('projects', '-password -__v');
+  const populatedUser = await user.populate<{ projects: Project[] }>('projects', '-password -__v');
 
   return populatedUser.projects;
 }

@@ -6,7 +6,7 @@ services:
     volumes:
       - mongodb:/data/db
     ports:
-      - 27018:27018
+      - "27017:27017"
     networks:
       - taskmaster-server
   caddy:
@@ -14,9 +14,9 @@ services:
     image: caddy:2.6.4-alpine
     restart: unless-stopped
     ports:
-      - 8080:8080
-      - 443:443
-      - 443:443/udp
+      - "8080:8080"
+      - "443:443"
+      - "443:443/udp"
     volumes:
       - $PWD/Caddyfile.dev:/etc/caddy/Caddyfile
       - caddy_data:/data
@@ -34,10 +34,12 @@ services:
     env_file:
       - .env.dev
     ports:
-      - 3000:3000
-      - 3001
+      - "3000:3000"
+      - "3001:3001"
     networks:
       - taskmaster-server
+    depends_on:
+      - mongodb
 volumes:
   caddy_data:
   caddy_config:

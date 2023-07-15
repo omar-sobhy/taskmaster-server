@@ -1,11 +1,11 @@
 services:
   mongodb:
     ports:
-      - 27019:27019
+      - "27019:27017"
   taskmaster-server:
     container_name: taskmaster-server-test
     env_file:
       - .env.test
     ports:
-      - 3002
+      - "4000:4000"
     command: npm run dev
