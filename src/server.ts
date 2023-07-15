@@ -76,7 +76,7 @@ async function start(options?: Options) {
 
   const routes = [
     new UserRoutes(),
-    new ProjectRoutes(logger),
+    new ProjectRoutes(),
     new SectionRoutes(),
     new TaskRoutes(),
     new CommentRoutes(),

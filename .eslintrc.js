@@ -2,38 +2,27 @@ module.exports = {
   env: {
     browser: true,
     es2021: true,
-    node: true,
+    node: true
   },
-  extends: [
-    "airbnb-base",
-    "airbnb-typescript/base",
-    "plugin:@typescript-eslint/recommended",
-  ],
-  parser: "@typescript-eslint/parser",
+  extends: ['airbnb-base', 'airbnb-typescript/base', 'plugin:@typescript-eslint/recommended'],
+  parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 13,
-    sourceType: "module",
-    project: `${__dirname}/tsconfig.json`,
+    sourceType: 'module',
+    project: `${__dirname}/tsconfig.json`
   },
-  plugins: ["@typescript-eslint"],
+  plugins: ['@typescript-eslint'],
   rules: {
-    "class-methods-use-this": ["off"],
-    semi: ["error", "always"],
-    quotes: ["error", "single"],
-    "no-console": ["off"],
-    "@typescript-eslint/no-use-before-define": ["off"],
-    "no-underscore-dangle": ["off"],
-    "import/no-extraneous-dependencies": [
-      "error",
+    semi: ['error', 'always'],
+    quotes: ['error', 'single'],
+    'no-console': ['off'],
+    '@typescript-eslint/no-use-before-define': ['off'],
+    'no-underscore-dangle': ['off'],
+    'import/no-extraneous-dependencies': [
+      'error',
       {
-        devDependencies: [
-          "**/*.test.ts",
-          "**/setup.ts",
-          "**/globalSetup.ts",
-          "**/globalTeardown.ts",
-          "*/globals.d.ts",
-        ],
-      },
-    ],
-  },
+        devDependencies: ['**/*.test.ts', 'setup.ts']
+      }
+    ]
+  }
 };

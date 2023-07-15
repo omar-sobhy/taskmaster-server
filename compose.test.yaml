@@ -7,10 +7,13 @@ services:
       - mongodb:/data/db
     ports:
       - "27019:27017"
+<<<<<<< HEAD
     networks:
       - taskmaster-server
     logging:
       driver: none
+=======
+>>>>>>> WIP testing
   taskmaster-server:
     container_name: taskmaster-server-test
     restart: no
@@ -20,6 +23,7 @@ services:
       - .env.test
     ports:
       - "4000:4000"
+<<<<<<< HEAD
       - "4001:4001"
     networks:
       - taskmaster-server
@@ -32,3 +36,6 @@ volumes:
   mongodb:
 networks:
   taskmaster-server:
+=======
+    command: npm run dev
+>>>>>>> WIP testing
