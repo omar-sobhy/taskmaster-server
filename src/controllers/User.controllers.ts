@@ -21,11 +21,11 @@ async function getByIds(userIds: string[] | ObjectId[]): Promise<User[] | string
   const usersAndErrors = await Promise.all(
     userIds.map(async (id) => {
       try {
-        const user = UserModel.findById(id, '-password -__v');
+        const user = await UserModel.findById(id, '-password -__v');
         if (user === null) {
           return id;
         }
-        return await user;
+        return user;
       } catch (error) {
         return id;
       }

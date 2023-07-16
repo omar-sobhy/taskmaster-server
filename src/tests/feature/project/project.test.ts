@@ -4,7 +4,6 @@ import {
 import { ObjectId } from 'mongodb';
 import request, { SuperAgentStatic } from 'superagent';
 import { faker } from '@faker-js/faker';
-import ProjectModel from '../../../database/Project/Project.model';
 import { signUp } from '../../../controllers/User.controllers';
 import User from '../../../database/User/User.interface';
 import { createProject } from '../../../controllers/Project.controllers';

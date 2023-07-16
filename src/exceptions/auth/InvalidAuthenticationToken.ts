@@ -2,7 +2,7 @@ import HttpException from '../HttpException';
 
 class InvalidAuthenticationTokenException extends HttpException {
   constructor() {
-    super(500, 'Invalid authentication token');
+    super(401, 'Invalid authentication token');
   }
 }
 

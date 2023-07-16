@@ -26,12 +26,12 @@ class UserRoutes implements RouterWrapper {
   }
 
   private initializeRoutes() {
-    this.router.post(`${this.path}`, validationMiddleware(GetUsersDto), UserRoutes.getUserData);
+    // have to list authMiddleware individually instead of using router.all()
+    // because we don't want it to run for /login and /signup
+    this.router.get(`${this.path}`, authMiddleware, UserRoutes.getUserData);
     this.router.post(`${this.path}/login`, validationMiddleware(LoginDto), UserRoutes.login);
     this.router.post(`${this.path}/signup`, validationMiddleware(CreateUserDto), UserRoutes.signUp);
-    this.router.get(`${this.path}/:userId/projects`, UserRoutes.projects);
-
-    this.router.all(`${this.path}/*`, authMiddleware);
+    this.router.get(`${this.path}/:userId/projects`, authMiddleware, UserRoutes.projects);
   }
 
   private static login(req: Request, res: Response, next: NextFunction) {
@@ -94,9 +94,17 @@ class UserRoutes implements RouterWrapper {
   }
 
   private static async getUserData(req: Request, res: Response, next: NextFunction) {
-    const { userIds } = req.body;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { userIds } = req.query;
 
-    const usersOrErrors = await getByIds(userIds);
+    if (!userIds) {
+      next(new HttpException(400, '\'userIds\' must be present'));
+      return;
+    }
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const userIds_ = typeof userIds === 'string' ? [userIds] : (userIds as string[]);
+
+    const usersOrErrors = await getByIds(userIds_);
     if (usersOrErrors.length === 0) {
       res
         .json({
