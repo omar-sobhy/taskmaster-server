@@ -1,11 +1,34 @@
 services:
   mongodb:
+    container_name: mongodb
+    image: mongo:6.0.7
+    restart: no
+    volumes:
+      - mongodb:/data/db
     ports:
       - "27019:27017"
+    networks:
+      - taskmaster-server
+    logging:
+      driver: none
   taskmaster-server:
     container_name: taskmaster-server-test
+    restart: no
+    build:
+      dockerfile: Dockerfile
     env_file:
       - .env.test
     ports:
       - "4000:4000"
-    command: npm run dev
+      - "4001:4001"
+    networks:
+      - taskmaster-server
+    depends_on:
+      - mongodb
+    command: npx jest
+volumes:
+  caddy_data:
+  caddy_config:
+  mongodb:
+networks:
+  taskmaster-server:

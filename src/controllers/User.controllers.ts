@@ -42,7 +42,7 @@ async function getByIds(userIds: string[] | ObjectId[]): Promise<User[] | string
 
 async function login(username: string, password: string): Promise<User | null> {
   const user = await UserModel.findOne({
-    username,
+    username: { $regex: new RegExp(username), $options: 'i' },
   });
 
   if (user === null) {

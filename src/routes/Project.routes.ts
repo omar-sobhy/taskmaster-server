@@ -1,6 +1,7 @@
 import {
   NextFunction, Request, Response, Router,
 } from 'express';
+import mongoose from 'mongoose';
 import RouterWrapper from '../controllers/RouterWrapper.interface';
 import ProjectModel from '../database/Project/Project.model';
 import CreateProjectDto from '../dtos/Projects/CreateProject.dto';
@@ -37,11 +38,7 @@ class ProjectRoutes implements RouterWrapper {
 
     this.router.get(`${this.path}`, authMiddleware, ProjectRoutes.getProjectsForUser);
 
-    this.router.post(
-      `${this.path}`,
-      validationMiddleware(CreateProjectDto),
-      ProjectRoutes.createProject,
-    );
+    this.router.post(`${this.path}`, validationMiddleware(CreateProjectDto), this.createProject);
 
     this.router.get(
       `${this.path}/:projectId`,
@@ -79,7 +76,7 @@ class ProjectRoutes implements RouterWrapper {
     this.router.all(`${this.path}/*`, authMiddleware);
   }
 
-  private static async createProject(req: Request, res: Response, next: NextFunction) {
+  private async createProject(req: Request, res: Response, next: NextFunction) {
     const { _id: userId } = (req as RequestWithUser).user;
 
     const projectOrError = await createProject(
@@ -188,6 +185,8 @@ class ProjectRoutes implements RouterWrapper {
   }
 
   private static async getProjectData(req: Request, res: Response, next: NextFunction) {
+    const { user } = req as RequestWithUser;
+
     const { projectId } = req.params;
     try {
       const project = await ProjectModel.findById(projectId);
@@ -218,7 +217,7 @@ class ProjectRoutes implements RouterWrapper {
       .end();
   }
 
-  public static async getTags(req: Request, res: Response, next: NextFunction) {
+  private static async getTags(req: Request, res: Response, next: NextFunction) {
     const { projectId } = req.params;
 
     const tagsResult = await getTags(projectId);
@@ -235,7 +234,7 @@ class ProjectRoutes implements RouterWrapper {
       .end();
   }
 
-  public static async createTag(req: Request, res: Response, next: NextFunction) {
+  private static async createTag(req: Request, res: Response, next: NextFunction) {
     const { projectId } = req.params;
     const { name } = req.body;
 

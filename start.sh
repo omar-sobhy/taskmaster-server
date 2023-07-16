@@ -1,8 +1,6 @@
 #!/bin/bash
 
-docker compose -f compose.dev.yaml down
-
-VALID_ARGS=$(getopt -o tpd --long testing,prod,detatch -- "$@")
+VALID_ARGS=$(getopt -o tpdb --long testing,prod,detatch,build -- "$@")
 
 eval set -- "$VALID_ARGS"
 
@@ -17,6 +15,9 @@ while [ : ]; do
     -d | --detatch)
       DETATCH=true;
       ;;
+    -b | --build)
+      BUILD=true;
+      ;;
     --)
       shift
       break
@@ -25,27 +26,27 @@ while [ : ]; do
   shift
 done
 
-COMMAND="docker compose -f compose.dev.yaml "
+COMMAND="docker compose "
 
-if [ "$MODE" = "prod" ]; then
-  COMMAND+="-f compose.prod.yaml "
-elif [ "MODE" = "testing" ]; then
+if [ "$MODE" = "testing" ]; then
   COMMAND+="-f compose.test.yaml "
+elif [ "$MODE" != "prod" ]; then
+  COMMAND+="-f compose.dev.yaml "
 fi
 
 COMMAND+="up "
+
+if [ "$MODE" = "testing" ]; then
+  COMMAND+="--abort-on-container-exit --no-attach mongodb"
+fi
 
 if [ $DETATCH ]; then
   COMMAND+="-d "
 fi
 
+if [ $BUILD ]; then
+  COMMAND+="--build "
+fi
+
 echo "running $COMMAND"
 eval "$COMMAND"
-
-# if [ "$1" = "prod" ]; then
-#   docker compose -f compose.dev.yaml -f compose.prod.yaml up
-# elif [ "$1" = "test" ]; then
-#   docker compose -f compose.dev.yaml -f compose.test.yaml up
-# else
-#   docker compose -f compose.dev.yaml up
-# fi

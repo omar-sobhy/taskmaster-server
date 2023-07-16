@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "env-cmd -f .env.testing jest",
+    "test": "env-cmd -f .env.test jest --config local.jest.config.js",
     "build": "tsc",
     "start": "node ./build/index.js --mode=prod",
     "dev": "nodemon src/index.ts --mode=dev"
@@ -30,10 +30,13 @@
     "mongodb": "^4.2.0",
     "mongoose": "^6.0.13",
     "nodemon": "^3.0.1",
+    "pino": "^8.14.1",
+    "pino-http": "^8.3.3",
     "reflect-metadata": "^0.1.13",
     "yargs": "^17.4.0"
   },
   "devDependencies": {
+    "@faker-js/faker": "^8.0.2",
     "@types/cors": "^2.8.12",
     "@types/superagent": "^4.1.18",
     "@typescript-eslint/eslint-plugin": "^5.62.0",

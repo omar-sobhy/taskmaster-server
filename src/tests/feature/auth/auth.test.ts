@@ -1,18 +1,17 @@
 import {
-  beforeAll, beforeEach, describe, expect, test,
+  beforeAll, describe, expect, test,
 } from '@jest/globals';
 import request, { SuperAgentStatic } from 'superagent';
+import { faker } from '@faker-js/faker';
 import { signUp } from '../../../controllers/User.controllers';
-import UserModel from '../../../database/User/User.model';
 
 describe('auth', () => {
   let agent: SuperAgentStatic;
 
   const useHttps = process.env.USE_HTTPS;
-  const port = process.env.__TASKMASTER_PORT__ ?? 3000;
+  const taskmasterPort = process.env.TASKMASTER_PORT;
 
-  console.log(`got port ${port}`);
-  const basePath = `${useHttps ? 'https' : 'http'}://localhost:${port}/users`;
+  const basePath = `${useHttps ? 'https' : 'http'}://localhost:${taskmasterPort}/users`;
 
   beforeAll(() => {
     agent = request
@@ -21,14 +20,10 @@ describe('auth', () => {
       .ok(() => true);
   });
 
-  beforeEach(async () => {
-    await UserModel.deleteMany({});
-  });
-
   describe('signup', () => {
     test('valid signup request', async () => {
       const user = {
-        username: 'validusername',
+        username: faker.internet.userName(),
         password: 'validpassword',
         email: 'random@random.com',
       };
@@ -67,7 +62,7 @@ describe('auth', () => {
 
         const p = agent.post(`${basePath}/signup`).send(user);
 
-        return expect(p).resolves.toMatchObject({
+        await expect(p).resolves.toMatchObject({
           body: {
             error: {
               message: expect.stringMatching(/.*username must be shorter than.*/),
@@ -78,14 +73,14 @@ describe('auth', () => {
 
       test('long password', async () => {
         const user = {
-          username: 'validusername',
+          username: faker.internet.userName(),
           password: 'a'.repeat(256),
           email: 'random@random.com',
         };
 
         const p = agent.post(`${basePath}/signup`).send(user);
 
-        return expect(p).resolves.toMatchObject({
+        await expect(p).resolves.toMatchObject({
           body: {
             error: {
               message: expect.stringMatching(/.*password must be shorter than.*/),
@@ -96,14 +91,14 @@ describe('auth', () => {
 
       test('long email', async () => {
         const user = {
-          username: 'validusername',
+          username: faker.internet.userName(),
           password: 'validpassword',
           email: `${'a'.repeat(500)}@random.com`,
         };
 
         const p = agent.post(`${basePath}/signup`).send(user);
 
-        return expect(p).resolves.toMatchObject({
+        await expect(p).resolves.toMatchObject({
           body: {
             error: {
               message: expect.stringMatching(/.*email must be shorter than.*/),
@@ -114,14 +109,14 @@ describe('auth', () => {
 
       test('invalid email', async () => {
         const user = {
-          username: 'validusername',
+          username: faker.internet.userName(),
           password: 'validpassword',
           email: 'invalid email address',
         };
 
         const p = agent.post(`${basePath}/signup`).send(user);
 
-        return expect(p).resolves.toMatchObject({
+        await expect(p).resolves.toMatchObject({
           body: {
             error: {
               message: expect.stringMatching(/.*must be an email.*/),
@@ -138,7 +133,7 @@ describe('auth', () => {
 
         const p = agent.post(`${basePath}/signup`).send(user);
 
-        return expect(p).resolves.toMatchObject({
+        await expect(p).resolves.toMatchObject({
           body: {
             error: {
               message: expect.stringMatching(/.*username must be a string.*/),
@@ -155,7 +150,7 @@ describe('auth', () => {
 
         const p = agent.post(`${basePath}/signup`).send(user);
 
-        return expect(p).resolves.toMatchObject({
+        await expect(p).resolves.toMatchObject({
           body: {
             error: {
               message: expect.stringMatching(/.*password must be a string.*/),
@@ -172,7 +167,7 @@ describe('auth', () => {
 
         const p = agent.post(`${basePath}/signup`).send(user);
 
-        return expect(p).resolves.toMatchObject({
+        await expect(p).resolves.toMatchObject({
           body: {
             error: {
               message: expect.stringMatching(/.*email must be a string.*/),
@@ -182,41 +177,41 @@ describe('auth', () => {
       });
 
       test('username already in use', async () => {
-        const user = await signUp('validusername', 'validpassword', 'random@random.com');
+        const username = faker.internet.userName();
+
+        const user = await signUp(username, 'validpassword', 'random@random.com');
 
         expect(user).not.toBeNull();
 
         const p = agent.post(`${basePath}/signup`).send({
-          username: 'valIduSerName',
+          username: username.toUpperCase(),
           password: 'validpassword',
           email: 'random@random.com',
         });
 
-        return expect(p).resolves.toMatchObject({
-          status: 500,
-          body: {
-            error: {
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              message: 'A user with username \'valIduSerName\' already exists',
-            },
-          },
-        });
+        await expect(p).resolves.toHaveProperty('status', 500);
+
+        await expect(p).resolves.toHaveProperty(
+          'body.error.message',
+          `A user with username '${username.toUpperCase()}' already exists`,
+        );
       });
     });
   });
 
   describe('login', () => {
     test('valid user can login', async () => {
-      const user = await signUp('validusername', 'validpassword', 'random@random.com');
+      const username = faker.internet.userName();
+      const user = await signUp(username, 'validpassword', 'random@random.com');
 
       expect(user).not.toBeNull();
 
       const p = agent.post(`${basePath}/login`).send({
-        username: 'validusername',
+        username,
         password: 'validpassword',
       });
 
-      return expect(p).resolves.not.toThrow();
+      await expect(p).resolves.not.toThrow();
     });
 
     describe('invalid login request', () => {
@@ -226,24 +221,25 @@ describe('auth', () => {
           password: 'invalidpassword',
         });
 
-        return expect(p).resolves.toHaveProperty(
+        await expect(p).resolves.toHaveProperty(
           'body.error.message',
           'Invalid username or password',
         );
       });
 
       test('invalid password cannot login', async () => {
-        const user = await signUp('validusername', 'validpassword', 'random@random.com');
+        const username = faker.internet.userName();
+        const user = await signUp(username, 'validpassword', 'random@random.com');
 
         expect(user).not.toBeNull();
 
         const p = agent.post(`${basePath}/login`).send({
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          username: user!.username,
+          username,
           password: 'invalidpassword',
         });
 
-        return expect(p).resolves.toHaveProperty(
+        await expect(p).resolves.toHaveProperty(
           'body.error.message',
           'Invalid username or password',
         );
@@ -254,7 +250,7 @@ describe('auth', () => {
           password: 'invalidpassword',
         });
 
-        return expect(p).resolves.toMatchObject({
+        await expect(p).resolves.toMatchObject({
           body: {
             error: {
               message: expect.stringContaining('username must be a string'),
@@ -268,7 +264,7 @@ describe('auth', () => {
           username: 'validusername',
         });
 
-        return expect(p).resolves.toMatchObject({
+        await expect(p).resolves.toMatchObject({
           body: {
             error: {
               message: expect.stringContaining('password must be a string'),

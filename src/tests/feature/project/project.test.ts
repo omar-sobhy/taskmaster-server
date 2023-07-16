@@ -1,47 +1,50 @@
 import {
-  afterAll, beforeAll, beforeEach, describe, expect, test,
+  beforeAll, beforeEach, describe, expect, test,
 } from '@jest/globals';
 import { ObjectId } from 'mongodb';
 import request, { SuperAgentStatic } from 'superagent';
-import mongoose from 'mongoose';
+import { faker } from '@faker-js/faker';
 import ProjectModel from '../../../database/Project/Project.model';
 import { signUp } from '../../../controllers/User.controllers';
 import User from '../../../database/User/User.interface';
 import { createProject } from '../../../controllers/Project.controllers';
-import UserModel from '../../../database/User/User.model';
 
 describe('project', () => {
   const useHttps = process.env.USE_HTTPS;
-  const port = globalThis.TASKMASTER_PORT ?? 3000;
+  const taskmasterPort = process.env.TASKMASTER_PORT;
 
-  const basePath = `${useHttps ? 'https' : 'http'}://localhost:${port}`;
+  const basePath = `${useHttps ? 'https' : 'http'}://localhost:${taskmasterPort}`;
 
   let agent: SuperAgentStatic;
   let user: User;
 
   beforeAll(async () => {
-    console.log(`ready state ${mongoose.connection.readyState}`);
-    const userResult = await signUp('username', 'password', 'cool@email.com');
+    const username = faker.internet.userName();
+
+    const userResult = await signUp(username, 'password', 'cool@email.com');
+
     expect(userResult).not.toBe(null);
+
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     user = userResult!;
   });
 
   beforeEach(async () => {
-    await ProjectModel.deleteMany({});
-    agent = request.agent();
+    agent = request
+      .agent()
+      .type('application/json')
+      .ok(() => true);
 
     if (expect.getState().currentTestName !== 'missing auth') {
-      await agent
+      const res = await agent
         .post(`${basePath}/users/login`)
-        .set('Content-Type', 'application/json')
-        .send({ username: 'username', password: 'password' });
+        .send({ username: user.username, password: 'password' });
+
+      expect(res.ok).toBe(true);
     }
   });
 
-  describe.skip('get all projects', () => {
-    test('missing auth', () => {});
-
+  describe('get all projects', () => {
     test('one project', async () => {
       const firstProject = await createProject(user._id.toString(), 'test');
       const secondProject = await createProject(new ObjectId(24).toString(), 'random name');
@@ -50,13 +53,11 @@ describe('project', () => {
 
       const p = agent.get(`${basePath}/projects`);
 
-      await p;
-
       await expect(p).resolves.toMatchObject({
         body: {
           projects: expect.arrayContaining([
             expect.objectContaining({
-              _id: firstProject?._id,
+              _id: firstProject?._id.toString(),
             }),
           ]),
         },
@@ -66,36 +67,154 @@ describe('project', () => {
         body: {
           projects: expect.arrayContaining([
             expect.objectContaining({
-              _id: secondProject?._id,
+              _id: secondProject?._id.toString(),
             }),
           ]),
         },
       });
     });
 
-    test.skip('many projects', async () => {});
+    test('many projects', async () => {
+      const firstProject = await createProject(user._id.toString(), 'test');
+      const secondProject = await createProject(user._id.toString(), 'random name');
+
+      expect(firstProject).not.toBeNull();
+      expect(secondProject).not.toBeNull();
+
+      const p = agent.get(`${basePath}/projects`);
+
+      await expect(p).resolves.toMatchObject({
+        body: {
+          projects: expect.arrayContaining([
+            expect.objectContaining({
+              _id: firstProject?._id.toString(),
+            }),
+            expect.objectContaining({
+              _id: secondProject?._id.toString(),
+            }),
+          ]),
+        },
+      });
+    });
+
+    test('no projects', async () => {
+      const username = faker.internet.userName();
+
+      // create another user with no projects
+      const anotherUser = await signUp(username, 'password', 'cool@email.com');
+
+      expect(anotherUser).not.toBeNull();
+
+      const anotherAgent = request
+        .agent()
+        .type('application/json')
+        .ok(() => true);
+
+      const loginResult = await anotherAgent
+        .post(`${basePath}/users/login`)
+        .send({ username, password: 'password' });
+
+      expect(loginResult).toMatchObject({
+        body: {
+          user: {
+            username,
+          },
+        },
+      });
+
+      const p = anotherAgent.get(`${basePath}/projects`);
+
+      await expect(p).resolves.toMatchObject({
+        body: {
+          projects: [],
+        },
+      });
+    });
+
+    describe('invalid request', () => {
+      test('missing auth', async () => {
+        // use global request instead of agent with auth cookie
+        const p = request.get(`${basePath}/projects`);
+
+        await expect(p).rejects.toMatchObject({
+          response: {
+            body: {
+              error: {
+                message: 'Missing authentication token',
+              },
+            },
+          },
+        });
+      });
+    });
   });
 
-  test.skip('get project', async () => {
-    const project = await createProject(user._id.toString(), 'test');
+  describe('get project by id', () => {
+    test('valid request', async () => {
+      const project = await createProject(user._id.toString(), 'test');
 
-    return expect(project).not.toBeNull();
+      expect(project).not.toBeNull();
 
-    // const loginResult = axios.post(`${basePath}/users/login`, {
-    //   username: 'username',
-    //   password: 'password',
-    // });
+      const p = agent.get(`${basePath}/projects/${project!._id}`);
 
-    // await expect(loginResult).resolves.not.toThrow();
+      await expect(p).resolves.toMatchObject({
+        body: {
+          project: {
+            _id: project!._id.toString(),
+          },
+        },
+      });
+    });
 
-    // const projectResult = axios.get(`${basePath}/projects`);
-  });
+    describe('invalid request', () => {
+      test('missing auth', async () => {
+        const project = await createProject(user._id.toString(), 'test');
 
-  describe('invalid request', () => {
-    test('missing auth', () => {});
+        expect(project).not.toBeNull();
 
-    test('missing permission to see project', () => {});
+        // use global request instead of agent with auth cookie
+        const p = request.get(`${basePath}/projects/${project!._id}`);
 
-    test('invalid project id', () => {});
+        await expect(p).rejects.toMatchObject({
+          response: {
+            body: {
+              error: {
+                message: 'Missing authentication token',
+              },
+            },
+          },
+        });
+      });
+
+      test('missing permission to see project', async () => {
+        const username = faker.internet.userName();
+
+        const anotherUser = await signUp(username, 'password', 'cool@email.com');
+
+        expect(anotherUser).not.toBeNull();
+
+        const project = await createProject(anotherUser!._id.toString(), 'test');
+
+        expect(project).not.toBeNull();
+
+        // will use auth cookie for pre-created user
+
+        const p = agent.get(`${basePath}/projects/${project!._id}`);
+
+        await expect(p).resolves.toHaveProperty(
+          'body.error.message',
+          `No project with id '${project!._id.toString()}' found`,
+        );
+      });
+
+      test('invalid project id', async () => {
+        const p = agent.get(`${basePath}/projects/invalidid`);
+
+        await expect(p).resolves.toHaveProperty(
+          'body.error.message',
+          'No project with id \'invalidid\' found',
+        );
+      });
+    });
   });
 });
