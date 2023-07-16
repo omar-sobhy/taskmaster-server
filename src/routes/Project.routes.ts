@@ -2,6 +2,7 @@ import {
   NextFunction, Request, Response, Router,
 } from 'express';
 import mongoose from 'mongoose';
+import { Logger } from 'pino';
 import RouterWrapper from '../controllers/RouterWrapper.interface';
 import ProjectModel from '../database/Project/Project.model';
 import CreateProjectDto from '../dtos/Projects/CreateProject.dto';
