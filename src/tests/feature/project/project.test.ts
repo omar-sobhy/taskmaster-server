@@ -7,6 +7,8 @@ import { faker } from '@faker-js/faker';
 import { signUp } from '../../../controllers/User.controllers';
 import User from '../../../database/User/User.interface';
 import { createProject } from '../../../controllers/Project.controllers';
+import Project from '../../../database/Project/Project.interface';
+import { createSections } from '../../../controllers/Section.controllers';
 
 describe('project', () => {
   const useHttps = process.env.USE_HTTPS;
@@ -35,11 +37,11 @@ describe('project', () => {
       .ok(() => true);
 
     if (expect.getState().currentTestName !== 'missing auth') {
-      const res = await agent
+      const loginResult = await agent
         .post(`${basePath}/users/login`)
         .send({ username: user.username, password: 'password' });
 
-      expect(res.ok).toBe(true);
+      expect(loginResult.ok).toBe(true);
     }
   });
 
@@ -150,7 +152,7 @@ describe('project', () => {
 
   describe('get project by id', () => {
     test('valid request', async () => {
-      const project = await createProject(user._id.toString(), 'test');
+      const project = await createProject(user._id.toString(), faker.word.noun());
 
       expect(project).not.toBeNull();
 
@@ -214,6 +216,49 @@ describe('project', () => {
           'No project with id \'invalidid\' found',
         );
       });
+    });
+  });
+
+  describe('get sections by project id', () => {
+    describe('valid request', () => {
+      let project: Project;
+
+      beforeEach(async () => {
+        const result = await createProject(user._id.toString(), faker.word.noun());
+
+        expect(result).not.toBeNull();
+
+        project = result!;
+      });
+
+      test.each([
+        { sections: [] },
+        { sections: [{ name: 'Open', colour: '#bef9f2', icon: '' }] },
+        {
+          sections: [
+            { name: 'Open', colour: '#bef9f2', icon: '' },
+            { name: 'In progress', colour: '#35b6ff', icon: '' },
+          ],
+        },
+      ])('has sections', async ({ sections }) => {
+        const sectionsResult = await createSections(project!._id.toString(), sections);
+
+        const p = agent.get(`${basePath}/projects/${project!._id.toString()}/sections`);
+
+        expect(sectionsResult).not.toBeNull();
+
+        await expect(p).resolves.toHaveProperty('status', 200);
+
+        await expect(p).resolves.toHaveProperty('body.sections');
+
+        await expect(p).resolves.toHaveProperty('body.sections.length', sections.length);
+      });
+    });
+
+    describe('invalid request', () => {
+      test('missing auth', async () => {});
+
+      test('invalid project id', async () => {});
     });
   });
 });
