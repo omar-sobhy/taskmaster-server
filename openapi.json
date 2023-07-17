@@ -1,0 +1,499 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "Taskmaster",
+    "version": "1.0"
+  },
+  "components": {
+    "examples": {},
+    "schemas": {
+      "GeneralErrorSchema": {
+        "properties": {
+          "error": {
+            "properties": {
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "LoginValidationErrorSchema": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/GeneralErrorSchema"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "error": {
+                "type": "object",
+                "properties": {
+                  "property": {
+                    "type": "string",
+                    "enum": ["username", "password"]
+                  },
+                  "propsErrors": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["minLength", "maxLength", "isString"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "SignupValidationErrorSchema": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/GeneralErrorSchema"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "error": {
+                "type": "object",
+                "properties": {
+                  "property": {
+                    "type": "string",
+                    "enum": ["username", "password", "email"]
+                  },
+                  "propsErrors": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["minLength", "maxLength", "isString", "isEmail"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "SignupUser": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 4,
+            "maxLength": 30
+          },
+          "password": {
+            "type": "string",
+            "minLength": 4,
+            "maxLength": 255
+          },
+          "email": {
+            "type": "string",
+            "minLength": 4,
+            "maxLength": 255,
+            "pattern": "email"
+          }
+        }
+      },
+      "LoginUser": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 4,
+            "maxLength": 30
+          },
+          "password": {
+            "type": "string",
+            "minLength": 4,
+            "maxLength": 255
+          }
+        }
+      },
+      "User": {
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string",
+            "minLength": 4,
+            "maxLength": 30
+          },
+          "email": {
+            "type": "string",
+            "minLength": 4,
+            "maxLength": 255,
+            "pattern": "email"
+          }
+        }
+      },
+      "Project": {
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "background": {
+            "type": "string"
+          },
+          "users": {
+            "description": "User IDs",
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "sections": {
+            "description": "Section IDs",
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "tags": {
+            "description": "Tag IDs",
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "GeneralError": {
+        "description": "A general error occurred",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/GeneralErrorSchema"
+            }
+          }
+        }
+      },
+      "UnauthorisedError": {
+        "description": "Missing or invalid authentication token",
+        "content": {
+          "application/json": {
+            "examples": {
+              "Missing or invalid authentication token": {
+                "value": {
+                  "error": {
+                    "message": "Invalid authentication token"
+                  }
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/components/schemas/GeneralErrorSchema"
+            }
+          }
+        }
+      },
+      "ValidationError": {
+        "description": "A validation error occurred",
+        "content": {
+          "application/json": {
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/GeneralErrorSchema"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "propsErrors": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "servers": [{ "url": "https://taskmaster.omarsobhy.dev/api/v1" }],
+  "paths": {
+    "/users/signup": {
+      "post": {
+        "summary": "User signup",
+        "requestBody": {
+          "description": "User information",
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "Valid signup request": {
+                  "value": {
+                    "username": "VeryCoolUsername",
+                    "password": "VeryStrongPassword",
+                    "email": "cool@email.com"
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/SignupUser"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Valid signup request": {
+                    "value": {
+                      "user": {
+                        "username": "VeryCoolUsername",
+                        "email": "cool@email.com"
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "properties": {
+                    "user": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A validation error occurred",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Username too short": {
+                    "value": {
+                      "error": {
+                        "message": "username must be longer than or equal to 4 characters",
+                        "propsErrors": [
+                          {
+                            "property": "username",
+                            "constraint": "minLength"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/SignupValidationErrorSchema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "User with this username already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/GeneralErrorSchema"
+                    },
+                    {
+                      "example": {
+                        "error": {
+                          "message": "A username with username 'VeryCoolUsername' already exists"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": ["users"]
+      }
+    },
+    "/users/login": {
+      "post": {
+        "summary": "User login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "Valid login request": {
+                  "value": {
+                    "username": "VeryCoolUsername",
+                    "password": "VeryStrongPassword"
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/LoginUser"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Valid login request": {
+                    "value": {
+                      "username": "VeryCoolUsername",
+                      "password": "VeryStrongPassword"
+                    }
+                  }
+                },
+                "schema": {
+                  "properties": {
+                    "user": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A validation error occurred",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Username too short": {
+                    "value": {
+                      "error": {
+                        "message": "username must be longer than or equal to 4 characters",
+                        "propsErrors": [
+                          {
+                            "property": "username",
+                            "constraint": "minLength"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/LoginValidationErrorSchema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid username or password",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Invalid username or password": {
+                    "value": {
+                      "error": {
+                        "message": "Invalid username or password"
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "properties": {
+                    "user": {
+                      "$ref": "#/components/schemas/GeneralErrorSchema"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["users"]
+      }
+    },
+    "/projects": {
+      "summary": "Get projects for current user",
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "User with multiple projects": {
+                    "value": {
+                      "projects": [
+                        {
+                          "_id": "623c8e9aa631b8ea90c9f7a3",
+                          "name": "test",
+                          "background": "#0000ff",
+                          "users": ["623c8d54636044a86920f83f"],
+                          "sections": [
+                            "623c8e9aa631b8ea90c9f7a7",
+                            "623c8e9aa631b8ea90c9f7a8",
+                            "623c8e9aa631b8ea90c9f7a9",
+                            "623c8e9aa631b8ea90c9f7aa"
+                          ],
+                          "tags": [
+                            "64adc1fb8dc0d632c8fd5ce8",
+                            "64adc1fd8dc0d632c8fd5ced",
+                            "64adc2048dc0d632c8fd5cf8",
+                            "64adc2108dc0d632c8fd5d00"
+                          ]
+                        },
+                        {
+                          "_id": "624749ca6fe16ed5a43d2cf1",
+                          "name": "test project",
+                          "background": "#ff0000",
+                          "users": ["624749b56fe16ed5a43d2ce8"],
+                          "sections": [
+                            "624749ca6fe16ed5a43d2cf5",
+                            "624749ca6fe16ed5a43d2cf6",
+                            "624749ca6fe16ed5a43d2cf7",
+                            "624749ca6fe16ed5a43d2cf8"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                },
+                "schema": {
+                  "properties": {
+                    "projects": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Project"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorisedError"
+          }
+        },
+        "tags": ["projects"]
+      }
+    }
+  }
+}
