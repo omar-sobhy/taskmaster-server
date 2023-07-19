@@ -7,7 +7,7 @@ export default function IsValidRgbString() {
       target: object.constructor,
       propertyName,
       options: {
-        message: '$value is an invalid colour string',
+        message: '\'$value\' is an invalid colour string',
       },
       validator: {
         validate(value: any, args: ValidationArguments) {
