@@ -2,9 +2,9 @@ import {
   Router, Request, Response, NextFunction,
 } from 'express';
 import RouterWrapper from '../controllers/RouterWrapper.interface';
-import { getComments } from '../database_functions/Comment.database.functions';
 import CommentsNotFoundException from '../exceptions/comments/CommentsNotFoundException';
 import authMiddleware from '../middleware/auth.middleware';
+import { getComments } from '../controllers/Comment.controllers';
 
 class CommentRoutes implements RouterWrapper {
   public path = '/comments';

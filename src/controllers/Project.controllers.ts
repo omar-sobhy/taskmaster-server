@@ -3,17 +3,51 @@ import ProjectModel from '../database/Project/Project.model';
 import UserModel from '../database/User/User.model';
 import Section from '../database/Section/Section.interface';
 import SectionModel from '../database/Section/Section.model';
+import Result from '../interfaces/Result';
 
-async function getProjects(userId: string): Promise<Project[] | null> {
+async function getProject(projectId: string): Promise<Result<Project, 'PROJECT_NOT_FOUND'>> {
+  try {
+    const project = await ProjectModel.findById(projectId);
+
+    if (!project) {
+      return {
+        type: 'error',
+        errorType: 'PROJECT_NOT_FOUND',
+        errorData: projectId,
+      };
+    }
+
+    return {
+      type: 'success',
+      data: project,
+    };
+  } catch (error) {
+    return {
+      type: 'error',
+      errorType: 'PROJECT_NOT_FOUND',
+      errorData: projectId,
+    };
+  }
+}
+
+async function getProjects(
+  userId: string,
+): Promise<Result<Project[], 'USER_NOT_FOUND' | 'USER_NOT_IN_PROJECT'>> {
   const user = await UserModel.findById(userId);
 
   if (user === null) {
-    return null;
+    return {
+      type: 'error',
+      errorType: 'USER_NOT_FOUND',
+    };
   }
 
   const populatedUser = await user.populate<{ projects: Project[] }>('projects');
 
-  return populatedUser.projects;
+  return {
+    type: 'success',
+    data: populatedUser.projects,
+  };
 }
 
 async function createProject(userId: string, name: string): Promise<Project | null> {
@@ -79,5 +113,5 @@ async function createSections(
 export default { createSections };
 
 export {
-  createProject, getProjects, getSections, createSections,
+  createProject, getProject, getProjects, getSections, createSections,
 };
