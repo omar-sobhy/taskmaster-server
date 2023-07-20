@@ -1,40 +1,48 @@
-import ChecklistItem from '../database/ChecklistItem/ChecklistItem.interface';
-import Comment from '../database/Comment/Comment.interface';
-import HistoryItem from '../database/HistoryItem/HistoryItem.interface';
-import Project from '../database/Project/Project.interface';
-import ProjectModel from '../database/Project/Project.model';
-import Section from '../database/Section/Section.interface';
-import Tag from '../database/Tag/Tag.interface';
-import Task from '../database/Task/Task.interface';
-import User from '../database/User/User.interface';
+import { NextFunction, Request, Response } from 'express';
+import { getProject } from '../controllers/Project.controllers';
 import InsufficientPermissionsException from '../exceptions/permissions/InsufficientPermissionsException';
+import ProjectNotFoundException from '../exceptions/projects/ProjectNotFoundException';
+import RequestWithUser from '../interfaces/RequestWithUser.interface';
+import SectionNotFoundException from '../exceptions/sections/SectionNotFoundException';
+import { getSection } from '../controllers/Section.controllers';
 
-type Entity = User | ChecklistItem | Comment | HistoryItem | Project | Section | Tag | Task;
+function projectPermissionMiddleware(type: 'get' | 'update' | 'create' | 'delete') {
+  return async function checkPermissions(req: Request, _res: Response, next: NextFunction) {
+    const { user } = req as RequestWithUser;
 
-type RequestType = 'get' | 'update' | 'create' | 'delete';
-
-function entityIsUser(entity: Entity): entity is User {
-  return Object.prototype.hasOwnProperty.call(entity, 'email');
-}
-
-async function permissionMiddleware(user: User, entity: Entity, requestType: RequestType) {
-  if (entityIsUser(entity)) {
-    const commonProjects = await ProjectModel.find({
-      users: {
-        $elemMatch: {
-          $all: [user._id, entity._id],
-        },
-      },
-    });
-
-    if (!commonProjects) {
-      throw new InsufficientPermissionsException(user, { type: 'user', _id: entity._id });
+    const projectResult = await getProject(req.params.projectId);
+    if (projectResult.type === 'error') {
+      next(new ProjectNotFoundException(req.params.projectId));
+      return;
     }
-  }
 
-  return true;
+    const project = projectResult.data;
+
+    if (type === 'get') {
+      if (!project.users.map((u) => u.toString()).includes(user._id.toString())) {
+        // TODO log
+        next(new InsufficientPermissionsException(user, { type: 'project', _id: user._id }));
+      }
+    }
+
+    // TODO other types, expanded permission check
+
+    next();
+  };
 }
 
-export default permissionMiddleware;
+function sectionPermissionMiddleware(type: 'get' | 'update' | 'create' | 'delete') {
+  return async function checkPermissions(req: Request, res: Response, next: NextFunction) {
+    const { sectionId } = req.params;
 
-export { permissionMiddleware };
+    const sectionResult = await getSection(sectionId);
+
+    if (sectionResult.type === 'error') {
+      next(new SectionNotFoundException(sectionId));
+    }
+
+    return projectPermissionMiddleware(type)(req, res, next);
+  };
+}
+
+export { projectPermissionMiddleware, sectionPermissionMiddleware };
