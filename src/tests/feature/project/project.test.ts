@@ -256,9 +256,28 @@ describe('project', () => {
     });
 
     describe('invalid request', () => {
-      test('missing auth', async () => {});
+      test('missing auth', async () => {
+        // use global request instead of agent with auth cookie
+        const p = request.get(`${basePath}/projects/randomprojectid`);
 
-      test('invalid project id', async () => {});
+        await expect(p).rejects.toHaveProperty('status', 404);
+
+        await expect(p).rejects.toHaveProperty(
+          'response.body.error.message',
+          'Missing authentication token',
+        );
+      });
+
+      test('invalid project id', async () => {
+        const p = agent.get(`${basePath}/projects/invalidprojectid`);
+
+        await expect(p).resolves.toHaveProperty('status', 404);
+
+        await expect(p).resolves.toHaveProperty(
+          'body.error.message',
+          'No project with id \'invalidprojectid\' found',
+        );
+      });
     });
   });
 });

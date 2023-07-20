@@ -5,6 +5,7 @@ import {
 import request, { SuperAgentStatic } from 'superagent';
 import { signUp } from '../../../controllers/User.controllers';
 import User from '../../../database/User/User.interface';
+import { createProject } from '../../../controllers/Project.controllers';
 
 describe('user', () => {
   const useHttps = process.env.USE_HTTPS;
@@ -61,7 +62,18 @@ describe('user', () => {
       });
     });
 
-    test.skip('multiple user ids', async () => {});
+    // won't work for now
+    test.skip('multiple user ids', async () => {
+      const anotherUser = await signUp(faker.internet.userName(), 'password', 'cool@email.com');
+      expect(anotherUser).not.toBeNull();
+
+      const project = await createProject(user._id.toString(), 'test project');
+      expect(project).not.toBe(null);
+
+      const p = agent.get(`${basePath}/users`).query({
+        userIds: user._id.toString(),
+      });
+    });
   });
 
   describe('invalid request', () => {
