@@ -1171,7 +1171,7 @@
         "tags": ["users"],
         "security": [
           {
-            "cookieAuth": ["Authorization"]
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -1290,7 +1290,7 @@
         "summary": "Get all projects for user",
         "security": [
           {
-            "cookieAuth": ["Authorization"]
+            "cookieAuth": []
           }
         ],
         "responses": {
@@ -1322,7 +1322,7 @@
         "tags": ["projects"],
         "security": [
           {
-            "cookieAuth": ["Authorization"]
+            "cookieAuth": []
           }
         ],
         "requestBody": {
@@ -1397,7 +1397,7 @@
         "tags": ["projects"],
         "security": [
           {
-            "cookieAuth": ["Authorization"]
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -1446,7 +1446,7 @@
         "description": "Get all sections belonging to a project",
         "security": [
           {
-            "cookieAuth": ["Authorization"]
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -1486,7 +1486,7 @@
         "tags": ["sections"],
         "security": [
           {
-            "cookieAuth": ["Authorization"]
+            "cookieAuth": []
           }
         ],
         "requestBody": {
@@ -1610,7 +1610,7 @@
         "tags": ["tags", "projects"],
         "security": [
           {
-            "cookieAuth": ["Authorization"]
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -1650,7 +1650,7 @@
         "tags": ["tags", "projects"],
         "security": [
           {
-            "cookieAuth": ["Authorization"]
+            "cookieAuth": []
           }
         ],
         "requestBody": {
@@ -1724,7 +1724,7 @@
         "tags": ["sections"],
         "security": [
           {
-            "cookieAuth": ["Authorization"]
+            "cookieAuth": []
           }
         ],
         "responses": {
@@ -1757,7 +1757,7 @@
         "tags": ["sections"],
         "security": [
           {
-            "cookieAuth": ["Authorization"]
+            "cookieAuth": []
           }
         ],
         "requestBody": {
@@ -1810,7 +1810,7 @@
         "tags": ["sections"],
         "security": [
           {
-            "cookieAuth": ["Authorization"]
+            "cookieAuth": []
           }
         ],
         "responses": {
@@ -1839,7 +1839,7 @@
         "tags": ["sections", "tasks"],
         "security": [
           {
-            "cookieAuth": ["Authorization"]
+            "cookieAuth": []
           }
         ],
         "responses": {
@@ -1879,7 +1879,7 @@
         "tags": ["tasks"],
         "security": [
           {
-            "cookieAuth": ["Authorization"]
+            "cookieAuth": []
           }
         ],
         "requestBody": {
@@ -1961,7 +1961,7 @@
         "tags": ["tasks"],
         "security": [
           {
-            "cookieAuth": ["Authorization"]
+            "cookieAuth": []
           }
         ],
         "responses": {
@@ -2000,7 +2000,7 @@
         "tags": ["tasks"],
         "security": [
           {
-            "cookieAuth": ["Authorization"]
+            "cookieAuth": []
           }
         ],
         "responses": {
@@ -2022,7 +2022,7 @@
         "tags": ["tasks"],
         "security": [
           {
-            "cookieAuth": ["Authorization"]
+            "cookieAuth": []
           }
         ],
         "requestBody": {
@@ -2070,7 +2070,7 @@
         "tags": ["comments", "tasks"],
         "security": [
           {
-            "cookieAuth": ["Authorization"]
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -2110,7 +2110,7 @@
         "tags": ["comments", "tasks"],
         "security": [
           {
-            "cookieAuth": ["Authorization"]
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -2206,7 +2206,7 @@
         "tags": ["comments"],
         "security": [
           {
-            "cookieAuth": ["Authorization"]
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -2303,7 +2303,7 @@
         "tags": ["tags"],
         "security": [
           {
-            "cookieAuth": ["Authorization"]
+            "cookieAuth": []
           }
         ],
         "responses": {
@@ -2392,7 +2392,7 @@
         "tags": ["tags"],
         "security": [
           {
-            "cookieAuth": ["Authorization"]
+            "cookieAuth": []
           }
         ],
         "responses": {
