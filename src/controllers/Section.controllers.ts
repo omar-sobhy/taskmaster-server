@@ -5,34 +5,7 @@ import Section from '../database/Section/Section.interface';
 import SectionModel from '../database/Section/Section.model';
 import Task from '../database/Task/Task.interface';
 import TaskModel from '../database/Task/Task.model';
-import Result from '../interfaces/Result';
-
-async function createSections(
-  projectId: string,
-  sectionData: { name: string; colour: string; icon: string }[],
-): Promise<Result<Section[], 'PROJECT_NOT_FOUND'>> {
-  const project = await ProjectModel.findById(projectId);
-  if (!project) {
-    return {
-      type: 'error',
-      errorType: 'PROJECT_NOT_FOUND',
-    };
-  }
-
-  const sections = sectionData.map(
-    ({ name, colour, icon }) => new SectionModel({
-      name,
-      colour,
-      icon,
-      project: project.id,
-    }),
-  );
-
-  return {
-    type: 'success',
-    data: await Promise.all(sections),
-  };
-}
+import Result, { Failure } from '../interfaces/Result';
 
 async function getSection(sectionId: string): Promise<Result<Section, 'SECTION_NOT_FOUND'>> {
   try {
@@ -63,6 +36,14 @@ async function getSections(sectionIds: string[]): Promise<Result<Section[], 'SEC
   const sectionPromises = sectionIds.map(async (s) => {
     try {
       const section = await SectionModel.findById(s);
+
+      if (!section) {
+        return {
+          type: 'error' as const,
+          data: s,
+        };
+      }
+
       return {
         type: 'success' as const,
         data: section,
@@ -83,7 +64,7 @@ async function getSections(sectionIds: string[]): Promise<Result<Section[], 'SEC
     return {
       type: 'error',
       errorType: 'SECTION_NOT_FOUND',
-      errorData: errors[0].data,
+      errorData: errors.map((e) => e.data),
     };
   }
 
@@ -259,5 +240,10 @@ async function deleteSection(
 }
 
 export {
-  createSections, createTask, getSection, getSections, getTasks, updateSection, deleteSection,
+  createTask,
+  getSection,
+  getSections,
+  getTasks,
+  updateSection,
+  deleteSection,
 };

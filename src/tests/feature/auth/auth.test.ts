@@ -189,7 +189,7 @@ describe('auth', () => {
           email: 'random@random.com',
         });
 
-        await expect(p).resolves.toHaveProperty('status', 500);
+        await expect(p).resolves.toHaveProperty('status', 409);
 
         await expect(p).resolves.toHaveProperty(
           'body.error.message',

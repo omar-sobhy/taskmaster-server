@@ -153,7 +153,7 @@ async function getSections(projectId: string): Promise<Result<Section[], 'PROJEC
  */
 async function createSections(
   projectId: string,
-  sectionData: [{ name: string; colour: string; icon: string }],
+  sectionData: { name: string; colour: string; icon: string }[],
 ): Promise<Result<Section[], 'PROJECT_NOT_FOUND'>> {
   const project = await ProjectModel.findById(projectId);
   if (!project) {

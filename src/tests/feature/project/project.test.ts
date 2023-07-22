@@ -6,10 +6,10 @@ import request, { SuperAgentStatic } from 'superagent';
 import { faker } from '@faker-js/faker';
 import { signUp } from '../../../controllers/User.controllers';
 import User from '../../../database/User/User.interface';
-import { createProject } from '../../../controllers/Project.controllers';
+import { createProject, createSections } from '../../../controllers/Project.controllers';
 import Project from '../../../database/Project/Project.interface';
-import { createSections } from '../../../controllers/Section.controllers';
 import { Success } from '../../../interfaces/Result';
+import Section from '../../../database/Section/Section.interface';
 
 describe('project', () => {
   const useHttps = process.env.USE_HTTPS;
@@ -49,7 +49,13 @@ describe('project', () => {
   describe('get all projects', () => {
     test('one project', async () => {
       const firstProject = await createProject(user._id.toString(), 'test', '');
-      const secondProject = await createProject(new ObjectId(24).toString(), 'random name', '');
+
+      const secondUser = await signUp(faker.internet.userName(), 'password', 'cool@email.com');
+
+      expect(secondUser).not.toBeNull();
+
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const secondProject = await createProject(secondUser!._id.toString(), 'random name', '');
 
       expect(firstProject.type).toBe('success');
       expect(secondProject.type).toBe('success');
@@ -90,10 +96,10 @@ describe('project', () => {
         body: {
           projects: expect.arrayContaining([
             expect.objectContaining({
-              _id: (firstProject as Success<Project>).toString(),
+              _id: (firstProject as Success<Project>).data._id.toString(),
             }),
             expect.objectContaining({
-              _id: (secondProject as Success<Project>).toString(),
+              _id: (secondProject as Success<Project>).data._id.toString(),
             }),
           ]),
         },
@@ -246,15 +252,23 @@ describe('project', () => {
       ])('has sections', async ({ sections }) => {
         const sectionsResult = await createSections(project._id.toString(), sections);
 
-        const p = agent.get(`${basePath}/projects/${project._id.toString()}/sections`);
+        expect(sectionsResult.type).toBe('success');
 
-        expect(sectionsResult).not.toBeNull();
+        const p = agent.get(`${basePath}/projects/${project._id.toString()}/sections`);
 
         await expect(p).resolves.toHaveProperty('status', 200);
 
-        await expect(p).resolves.toHaveProperty('body.sections');
+        // eslint-disable-next-line arrow-body-style
+        const expectedIds = (sectionsResult as Success<Section[]>).data.map((s) => {
+          return expect.objectContaining({
+            _id: s._id.toString(),
+          });
+        });
 
-        await expect(p).resolves.toHaveProperty('body.sections.length', sections.length);
+        await expect(p).resolves.toHaveProperty(
+          'body.sections',
+          expect.arrayContaining(expectedIds),
+        );
       });
     });
 
@@ -263,7 +277,7 @@ describe('project', () => {
         // use global request instead of agent with auth cookie
         const p = request.get(`${basePath}/projects/randomprojectid`);
 
-        await expect(p).rejects.toHaveProperty('status', 404);
+        await expect(p).rejects.toHaveProperty('status', 401);
 
         await expect(p).rejects.toHaveProperty(
           'response.body.error.message',
