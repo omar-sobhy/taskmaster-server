@@ -1,12 +1,13 @@
 import { Type } from 'class-transformer';
 import {
-  IsArray, IsOptional, IsString, Length,
+  IsArray, IsOptional, IsString, Length, MaxLength, MinLength,
 } from 'class-validator';
 import CreateSectionDataDto from './CreateSectionData.dto';
 
 class CreateProjectDto {
   @IsString()
-  @Length(4)
+  @MinLength(4)
+  @MaxLength(255)
   public name!: string;
 
   @IsString()

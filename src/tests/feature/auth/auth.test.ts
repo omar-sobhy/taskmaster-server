@@ -55,7 +55,7 @@ describe('auth', () => {
 
       test('long username', async () => {
         const user = {
-          username: 'a'.repeat(30),
+          username: 'a'.repeat(100),
           password: 'validpassword',
           email: 'random@random.com',
         };

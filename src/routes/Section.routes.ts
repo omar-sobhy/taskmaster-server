@@ -62,9 +62,6 @@ class SectionRoutes implements Controller {
       sectionPermissionMiddleware('delete'),
       SectionRoutes.deleteSection,
     );
-
-    this.router.all(`${this.path}`, authMiddleware);
-    this.router.all(`${this.path}/*`, authMiddleware);
   }
 
   private static async getTasks(req: Request, res: Response, next: NextFunction) {

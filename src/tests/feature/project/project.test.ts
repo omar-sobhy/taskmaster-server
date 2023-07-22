@@ -333,6 +333,29 @@ describe('project', () => {
     });
 
     describe('invalid request', () => {
+      test('missing section name', async () => {
+        const p = agent.post(`${basePath}/projects/${project._id.toString()}/sections`).send({
+          sections: [
+            {
+              colour: faker.color.rgb(),
+              icon: '',
+            },
+          ],
+        });
+
+        await expect(p).resolves.toHaveProperty('status', 400);
+
+        await expect(p).resolves.toHaveProperty(
+          'body.error.propsErrors.0.property',
+          'sections.0.name',
+        );
+
+        await expect(p).resolves.toHaveProperty(
+          'body.error.propsErrors.0.constraints',
+          expect.arrayContaining(['isString']),
+        );
+      });
+
       test('too long section name', async () => {
         const p = agent.post(`${basePath}/projects/${project._id.toString()}/sections`).send({
           sections: [
@@ -346,17 +369,110 @@ describe('project', () => {
 
         await expect(p).resolves.toHaveProperty('status', 400);
 
-        await expect(p).resolves.toHaveProperty('body.error.propsErrors.property', 'name');
-        await expect(p).resolves.toHaveProperty('body.error.propsErrors.constraints', 'maxLength');
+        await expect(p).resolves.toHaveProperty(
+          'body.error.propsErrors.0.property',
+          'sections.0.name',
+        );
+
+        await expect(p).resolves.toHaveProperty(
+          'body.error.propsErrors.0.constraints.0',
+          'maxLength',
+        );
       });
 
-      test('invalid colour string', async () => {});
+      test('invalid colour string', async () => {
+        const p = agent.post(`${basePath}/projects/${project._id.toString()}/sections`).send({
+          sections: [
+            {
+              name: faker.word.noun(),
+              colour: 'invalid RGB string',
+              icon: '',
+            },
+          ],
+        });
+
+        await expect(p).resolves.toHaveProperty('status', 400);
+
+        await expect(p).resolves.toHaveProperty(
+          'body.error.propsErrors.0.property',
+          'sections.0.colour',
+        );
+
+        await expect(p).resolves.toHaveProperty(
+          'body.error.propsErrors.0.constraints.0',
+          'isValidRgbString',
+        );
+      });
 
       test.skip('invalid icon ID', async () => {});
 
-      test('missing auth', async () => {});
+      test('missing auth', async () => {
+        // use global request instead of agent with auth cookie
+        const p = request.post(`${basePath}/projects/${project._id.toString()}/sections`).send({
+          sections: [
+            {
+              name: faker.word.noun(),
+              colour: '#ff0000',
+              icon: '',
+            },
+          ],
+        });
+
+        await expect(p).rejects.toMatchObject({
+          response: {
+            body: {
+              error: {
+                message: 'Missing authentication token',
+              },
+            },
+          },
+        });
+      });
 
       test.skip('missing permission to create section', async () => {});
+    });
+  });
+
+  describe('create project', () => {
+    test('valid request', async () => {
+      const name = faker.word.noun();
+
+      const p = agent.post(`${basePath}/projects`).send({ name, background: '' });
+
+      await expect(p).resolves.toHaveProperty('status', 200);
+
+      await expect(p).resolves.toHaveProperty('body.project.name', name);
+    });
+
+    describe('invalid request', () => {
+      test.each([
+        { name: undefined, background: '' },
+        { name: '', background: '' },
+        { name: 'a'.repeat(256), background: '' },
+      ])('bad project name', async ({ name }) => {
+        const p = agent.post(`${basePath}/projects`).send({ name });
+
+        await expect(p).resolves.toHaveProperty('status', 400);
+
+        await expect(p).resolves.toHaveProperty(
+          'body.error.propsErrors',
+          expect.arrayContaining([expect.objectContaining({ property: 'name' })]),
+        );
+      });
+
+      test('missing auth', async () => {
+        const p = request.post(`${basePath}/projects`).send({ name: faker.word.noun() });
+
+        await expect(p).rejects.toMatchObject({
+          response: {
+            body: {
+              error: {
+                message: 'Missing authentication token',
+              },
+            },
+          },
+        });
+      });
     });
   });
 });
