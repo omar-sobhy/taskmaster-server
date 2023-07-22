@@ -11,7 +11,6 @@ import authMiddleware from '../middleware/auth.middleware';
 import validationMiddleware from '../middleware/validation.middleware';
 import CreateSectionsDto from '../dtos/Projects/CreateSections.dto';
 import CreateTagDto from '../dtos/Projects/CreateTag.dto';
-import InsufficientPermissionsException from '../exceptions/permissions/InsufficientPermissionsException';
 import {
   createProject,
   createSections,
@@ -21,6 +20,7 @@ import {
   getSections,
   getTags,
 } from '../controllers/Project.controllers';
+import { projectPermissionMiddleware } from '../middleware/permission.middleware';
 
 class ProjectRoutes implements RouterWrapper {
   public path = '/projects';
@@ -45,62 +45,38 @@ class ProjectRoutes implements RouterWrapper {
 
     this.router.get(
       `${this.path}/:projectId`,
-      ProjectRoutes.permissionMiddleware('get'),
+      projectPermissionMiddleware('get'),
       ProjectRoutes.getProjectData,
     );
 
     this.router.get(
       `${this.path}/:projectId/sections`,
-      ProjectRoutes.permissionMiddleware('get'),
+      projectPermissionMiddleware('get'),
       ProjectRoutes.getSections,
     );
 
     this.router.get(
       `${this.path}/:projectId/tags`,
-      ProjectRoutes.permissionMiddleware('get'),
+      projectPermissionMiddleware('get'),
       ProjectRoutes.getTags,
     );
 
     this.router.post(
       `${this.path}/:projectId/sections`,
       validationMiddleware(CreateSectionsDto),
-      ProjectRoutes.permissionMiddleware('update'),
+      projectPermissionMiddleware('update'),
       ProjectRoutes.createSections,
     );
 
     this.router.post(
       `${this.path}/:projectId/tags`,
       validationMiddleware(CreateTagDto),
-      ProjectRoutes.permissionMiddleware('update'),
+      projectPermissionMiddleware('update'),
       ProjectRoutes.createTag,
     );
 
     this.router.all(`${this.path}`, authMiddleware);
     this.router.all(`${this.path}/*`, authMiddleware);
-  }
-
-  private static permissionMiddleware(type: 'get' | 'update' | 'create' | 'delete') {
-    return async function checkPermissions(req: Request, _res: Response, next: NextFunction) {
-      const { user } = req as RequestWithUser;
-
-      const projectResult = await getProject(req.params.projectId);
-      if (projectResult.type === 'error') {
-        throw new ProjectNotFoundException(req.params.projectId);
-      }
-
-      const project = projectResult.data;
-
-      if (type === 'get') {
-        if (!project.users.map((u) => u.toString()).includes(user._id.toString())) {
-          // TODO log
-          throw new InsufficientPermissionsException(user, { type: 'project', _id: user._id });
-        }
-      }
-
-      // TODO other types, expanded permission check
-
-      next();
-    };
   }
 
   private static async createProject(req: Request, res: Response, next: NextFunction) {

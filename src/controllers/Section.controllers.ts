@@ -1,3 +1,4 @@
+import { isValidObjectId } from 'mongoose';
 import Project from '../database/Project/Project.interface';
 import ProjectModel from '../database/Project/Project.model';
 import Section from '../database/Section/Section.interface';
@@ -33,9 +34,7 @@ async function createSections(
   };
 }
 
-async function getSection(
-  sectionId: string,
-): Promise<Result<Section, 'SECTION_NOT_FOUND'>> {
+async function getSection(sectionId: string): Promise<Result<Section, 'SECTION_NOT_FOUND'>> {
   try {
     const section = await SectionModel.findById(sectionId);
 
@@ -60,31 +59,40 @@ async function getSection(
   }
 }
 
-async function getSections(projectId: string): Promise<Result<Section[], 'PROJECT_NOT_FOUND'>> {
-  try {
-    const project = await ProjectModel.findById(projectId);
-    if (!project) {
+async function getSections(sectionIds: string[]): Promise<Result<Section[], 'SECTION_NOT_FOUND'>> {
+  const sectionPromises = sectionIds.map(async (s) => {
+    try {
+      const section = await SectionModel.findById(s);
       return {
-        type: 'error',
-        errorType: 'PROJECT_NOT_FOUND',
+        type: 'success' as const,
+        data: section,
+      };
+    } catch (error) {
+      return {
+        type: 'error' as const,
+        data: s,
       };
     }
+  });
 
-    const populatedProject = await project.populate<{ sections: Section[] }>('sections', '-__v');
+  const sectionsOrErrors = await Promise.all(sectionPromises);
 
-    const { sections } = populatedProject;
+  const errors = sectionsOrErrors.filter((o) => o.type === 'error');
 
-    return {
-      type: 'success',
-      data: sections,
-    };
-  } catch (error) {
-    console.error(error);
+  if (errors.length !== 0) {
     return {
       type: 'error',
-      errorType: 'PROJECT_NOT_FOUND',
+      errorType: 'SECTION_NOT_FOUND',
+      errorData: errors[0].data,
     };
   }
+
+  const sections = sectionsOrErrors.map((o) => o.data);
+
+  return {
+    type: 'success',
+    data: sections as Section[],
+  };
 }
 
 async function updateSection(
@@ -118,6 +126,32 @@ async function updateSection(
       errorType: 'SECTION_NOT_FOUND',
     };
   }
+}
+
+async function getTasks(sectionId: string): Promise<Result<Task[], 'SECTION_NOT_FOUND'>> {
+  if (!isValidObjectId(sectionId)) {
+    return {
+      type: 'error',
+      errorType: 'SECTION_NOT_FOUND',
+      errorData: sectionId,
+    };
+  }
+
+  const section = await SectionModel.findById(sectionId, '-__v');
+  if (!section) {
+    return {
+      type: 'error',
+      errorType: 'SECTION_NOT_FOUND',
+      errorData: sectionId,
+    };
+  }
+
+  const populatedSection = await section.populate<{ tasks: Task[] }>('tasks');
+
+  return {
+    type: 'success',
+    data: populatedSection.tasks,
+  };
 }
 
 async function createTask(
@@ -225,5 +259,5 @@ async function deleteSection(
 }
 
 export {
-  createSections, createTask, getSection, getSections, updateSection, deleteSection,
+  createSections, createTask, getSection, getSections, getTasks, updateSection, deleteSection,
 };

@@ -1,10 +1,16 @@
-import { ObjectId } from 'mongoose';
 import User from '../../database/User/User.interface';
 import HttpException from '../HttpException';
 
 class InsufficientPermissionsException extends HttpException {
-  constructor(user: User, entity: { type: string; _id: ObjectId }) {
-    super(401, `${user._id} tried to access entity ${entity._id} without permission`);
+  public entities;
+
+  constructor(user: User, entities: { type: string; _id: string }[]) {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const { _id, type } = entities[0];
+
+    super(404, `No ${type} with id '${_id.toString()}' found`);
+
+    this.entities = entities;
   }
 }
 

@@ -2,11 +2,7 @@ import {
   NextFunction, Request, Response, Router,
 } from 'express';
 import RouterWrapper from '../controllers/RouterWrapper.interface';
-import {
-  deleteTag,
-  getTagData,
-  updateTag,
-} from '../database_functions/Tag.database.functions';
+import { deleteTag, getTags, updateTag } from '../controllers/Tag.controllers';
 import TagsNotFoundException from '../exceptions/tags/TagsNotFoundException';
 import authMiddleware from '../middleware/auth.middleware';
 import RequestWithUser from '../interfaces/RequestWithUser.interface';
@@ -26,7 +22,7 @@ class TagRoutes implements RouterWrapper {
     this.router.all(`${this.path}`, authMiddleware);
     this.router.all(`${this.path}/*`, authMiddleware);
 
-    this.router.get(`${this.path}`, TagRoutes.getTagData);
+    this.router.get(`${this.path}`, TagRoutes.getTag);
 
     this.router.post(
       `${this.path}/:tagId`,
@@ -37,11 +33,7 @@ class TagRoutes implements RouterWrapper {
     this.router.delete(`${this.path}/:tagId`, TagRoutes.deleteTag);
   }
 
-  private static async getTagData(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) {
+  private static async getTag(req: Request, res: Response, next: NextFunction) {
     const { tagId } = req.query;
     if (!tagId) {
       res
@@ -53,8 +45,8 @@ class TagRoutes implements RouterWrapper {
     }
 
     const tagsOrError = await (typeof tagId === 'string'
-      ? getTagData([tagId])
-      : getTagData(tagId as string[]));
+      ? getTags([tagId])
+      : getTags(tagId as string[]));
 
     if (tagsOrError.type === 'error') {
       next(new TagsNotFoundException(tagsOrError.errorData as string[]));
@@ -70,11 +62,7 @@ class TagRoutes implements RouterWrapper {
       .end();
   }
 
-  private static async updateTag(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) {
+  private static async updateTag(req: Request, res: Response, next: NextFunction) {
     const { tagId } = req.params;
     const { colour, name } = req.body;
 
@@ -97,11 +85,7 @@ class TagRoutes implements RouterWrapper {
       .end();
   }
 
-  private static async deleteTag(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) {
+  private static async deleteTag(req: Request, res: Response, next: NextFunction) {
     const { tagId } = req.params;
     if (!tagId) {
       next(new TagsNotFoundException(['undefined']));

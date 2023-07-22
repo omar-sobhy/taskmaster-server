@@ -9,11 +9,11 @@ import {
   createTask,
   deleteSection,
   getSection,
+  getTasks,
   updateSection,
 } from '../controllers/Section.controllers';
 import AssigneeNotInProjectException from '../exceptions/projects/AssigneeNotInProjectException';
 import CreateTaskDto from '../dtos/Sections/CreateTask.dto';
-import { getTasks } from '../database_functions/Task.database.functions';
 import authMiddleware from '../middleware/auth.middleware';
 import RequestWithUser from '../interfaces/RequestWithUser.interface';
 import { sectionPermissionMiddleware } from '../middleware/permission.middleware';
@@ -70,9 +70,7 @@ class SectionRoutes implements Controller {
   private static async getTasks(req: Request, res: Response, next: NextFunction) {
     const { sectionId } = req.params;
 
-    const { user } = req as RequestWithUser;
-
-    const tasksOrError = await getTasks(user._id.toString(), sectionId);
+    const tasksOrError = await getTasks(sectionId);
 
     if (tasksOrError.type === 'error') {
       next(new SectionNotFoundException(sectionId));

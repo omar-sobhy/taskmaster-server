@@ -5,7 +5,7 @@ import ProjectModel from '../database/Project/Project.model';
 import SectionModel from '../database/Section/Section.model';
 import Task from '../database/Task/Task.interface';
 import TaskModel from '../database/Task/Task.model';
-import Result from '../interfaces/Result';
+import Result, { Failure, Success } from '../interfaces/Result';
 import Comment from '../database/Comment/Comment.interface';
 import CommentModel from '../database/Comment/Comment.model';
 import TagModel from '../database/Tag/Tag.model';
@@ -32,14 +32,78 @@ async function getTask(taskId: string): Promise<Result<Task, 'TASK_NOT_FOUND'>> 
   }
 }
 
+/**
+ * Get tasks by taskId.
+ *
+ * Returns `Failure<'TASK_NOT_FOUND>` if one of the `taskIds` is invalid
+ * or not found in the database.
+ *
+ * @param taskIds the IDs of the tasks
+ *
+ * @returns the tasks, or `Failure<'TASK_NOT_FOUND'>`, or `Failure<'UNKNOWN_ERROR'>`
+ */
+async function getTasks(
+  taskIds: string[],
+): Promise<Result<Task[], 'TASK_NOT_FOUND' | 'UNKNOWN_ERROR'>> {
+  try {
+    const invalidIds = taskIds.filter((t) => !mongoose.isValidObjectId(t));
+    if (invalidIds.length !== 0) {
+      return {
+        type: 'error',
+        errorType: 'TASK_NOT_FOUND',
+        errorData: invalidIds[0],
+      };
+    }
+
+    const promises = taskIds.map(async (t) => {
+      const task = await TaskModel.findById(t, '-__v');
+      if (!task) {
+        return {
+          type: 'error',
+          errorType: 'TASK_NOT_FOUND',
+          errorData: t,
+        } as Result<Task, 'TASK_NOT_FOUND'>;
+      }
+
+      return {
+        type: 'success',
+        data: task,
+      } as Result<Task, 'TASK_NOT_FOUND'>;
+    });
+
+    const taskResults = await Promise.all(promises);
+
+    const invalidTasks = taskResults.filter(
+      (t) => t.type === 'error',
+    ) as Failure<'TASK_NOT_FOUND'>[];
+
+    if (invalidTasks.length !== 0) {
+      return {
+        type: 'error',
+        errorType: 'TASK_NOT_FOUND',
+        errorData: invalidTasks[0].errorData,
+      };
+    }
+
+    const tasks = taskResults.map((t) => (t as Success<Task>).data);
+
+    return {
+      type: 'success',
+      data: tasks,
+    };
+  } catch (error) {
+    return {
+      type: 'error',
+      errorType: 'UNKNOWN_ERROR',
+      errorData: error,
+    };
+  }
+}
+
 async function updateTask(
   taskId: string,
   {
-    name,
-    dueDate,
-    assignee,
-    description,
-    tags,
+    name, dueDate, assignee, description, tags,
   }: Partial<Task>,
 ): Promise<Result<Task, 'TASK_NOT_FOUND' | 'ASSIGNEE_NOT_IN_PROJECT' | 'TAG_NOT_FOUND'>> {
   try {
@@ -186,5 +250,5 @@ async function createComment(
 }
 
 export {
-  deleteTask, updateTask, getTask, createComment,
+  deleteTask, updateTask, getTask, getTasks, createComment,
 };
