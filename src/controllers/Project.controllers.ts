@@ -145,7 +145,7 @@ async function getSections(projectId: string): Promise<Result<Section[], 'PROJEC
  *
  * Returns `Failure<'PROJECT_NOT_FOUND'>` if `projectId` is invalid or not found in the database.
  * `errorData` will be the value of `projectId`.
- * 
+ *
  * @param projectId the id of the project
  * @param sectionData the data to use to create the sections
  *

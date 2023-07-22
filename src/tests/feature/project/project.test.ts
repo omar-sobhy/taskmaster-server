@@ -9,6 +9,7 @@ import User from '../../../database/User/User.interface';
 import { createProject } from '../../../controllers/Project.controllers';
 import Project from '../../../database/Project/Project.interface';
 import { createSections } from '../../../controllers/Section.controllers';
+import { Success } from '../../../interfaces/Result';
 
 describe('project', () => {
   const useHttps = process.env.USE_HTTPS;
@@ -47,10 +48,11 @@ describe('project', () => {
 
   describe('get all projects', () => {
     test('one project', async () => {
-      const firstProject = await createProject(user._id.toString(), 'test');
-      const secondProject = await createProject(new ObjectId(24).toString(), 'random name');
+      const firstProject = await createProject(user._id.toString(), 'test', '');
+      const secondProject = await createProject(new ObjectId(24).toString(), 'random name', '');
 
-      expect(firstProject).not.toBeNull();
+      expect(firstProject.type).toBe('success');
+      expect(secondProject.type).toBe('success');
 
       const p = agent.get(`${basePath}/projects`);
 
@@ -58,7 +60,7 @@ describe('project', () => {
         body: {
           projects: expect.arrayContaining([
             expect.objectContaining({
-              _id: firstProject?._id.toString(),
+              _id: (firstProject as Success<Project>).data._id.toString(),
             }),
           ]),
         },
@@ -68,7 +70,7 @@ describe('project', () => {
         body: {
           projects: expect.arrayContaining([
             expect.objectContaining({
-              _id: secondProject?._id.toString(),
+              _id: (secondProject as Success<Project>).data._id.toString(),
             }),
           ]),
         },
@@ -76,11 +78,11 @@ describe('project', () => {
     });
 
     test('many projects', async () => {
-      const firstProject = await createProject(user._id.toString(), 'test');
-      const secondProject = await createProject(user._id.toString(), 'random name');
+      const firstProject = await createProject(user._id.toString(), 'test', '');
+      const secondProject = await createProject(user._id.toString(), 'random name', '');
 
-      expect(firstProject).not.toBeNull();
-      expect(secondProject).not.toBeNull();
+      expect(firstProject.type).toBe('success');
+      expect(secondProject.type).toBe('success');
 
       const p = agent.get(`${basePath}/projects`);
 
@@ -88,10 +90,10 @@ describe('project', () => {
         body: {
           projects: expect.arrayContaining([
             expect.objectContaining({
-              _id: firstProject?._id.toString(),
+              _id: (firstProject as Success<Project>).toString(),
             }),
             expect.objectContaining({
-              _id: secondProject?._id.toString(),
+              _id: (secondProject as Success<Project>).toString(),
             }),
           ]),
         },
@@ -152,16 +154,16 @@ describe('project', () => {
 
   describe('get project by id', () => {
     test('valid request', async () => {
-      const project = await createProject(user._id.toString(), faker.word.noun());
+      const project = await createProject(user._id.toString(), faker.word.noun(), '');
 
-      expect(project).not.toBeNull();
+      expect(project.type).toBe('success');
 
-      const p = agent.get(`${basePath}/projects/${project!._id}`);
+      const p = agent.get(`${basePath}/projects/${(project as Success<Project>).data._id}`);
 
       await expect(p).resolves.toMatchObject({
         body: {
           project: {
-            _id: project!._id.toString(),
+            _id: (project as Success<Project>).data._id.toString(),
           },
         },
       });
@@ -169,12 +171,12 @@ describe('project', () => {
 
     describe('invalid request', () => {
       test('missing auth', async () => {
-        const project = await createProject(user._id.toString(), 'test');
+        const project = await createProject(user._id.toString(), 'test', '');
 
-        expect(project).not.toBeNull();
+        expect(project.type).toBe('success');
 
         // use global request instead of agent with auth cookie
-        const p = request.get(`${basePath}/projects/${project!._id}`);
+        const p = request.get(`${basePath}/projects/${(project as Success<Project>).data._id}`);
 
         await expect(p).rejects.toMatchObject({
           response: {
@@ -194,17 +196,18 @@ describe('project', () => {
 
         expect(anotherUser).not.toBeNull();
 
-        const project = await createProject(anotherUser!._id.toString(), 'test');
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const project = await createProject(anotherUser!._id.toString(), 'test', '');
 
-        expect(project).not.toBeNull();
+        expect(project.type).toBe('success');
 
         // will use auth cookie for pre-created user
 
-        const p = agent.get(`${basePath}/projects/${project!._id}`);
+        const p = agent.get(`${basePath}/projects/${(project as Success<Project>).data._id}`);
 
         await expect(p).resolves.toHaveProperty(
           'body.error.message',
-          `No project with id '${project!._id.toString()}' found`,
+          `No project with id '${(project as Success<Project>).data._id.toString()}' found`,
         );
       });
 
@@ -224,11 +227,11 @@ describe('project', () => {
       let project: Project;
 
       beforeEach(async () => {
-        const result = await createProject(user._id.toString(), faker.word.noun());
+        const result = await createProject(user._id.toString(), faker.word.noun(), '');
 
-        expect(result).not.toBeNull();
+        expect(result.type).toBe('success');
 
-        project = result!;
+        project = (result as Success<Project>).data;
       });
 
       test.each([
@@ -241,9 +244,9 @@ describe('project', () => {
           ],
         },
       ])('has sections', async ({ sections }) => {
-        const sectionsResult = await createSections(project!._id.toString(), sections);
+        const sectionsResult = await createSections(project._id.toString(), sections);
 
-        const p = agent.get(`${basePath}/projects/${project!._id.toString()}/sections`);
+        const p = agent.get(`${basePath}/projects/${project._id.toString()}/sections`);
 
         expect(sectionsResult).not.toBeNull();
 

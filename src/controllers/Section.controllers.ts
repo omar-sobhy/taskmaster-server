@@ -9,7 +9,7 @@ import Result from '../interfaces/Result';
 
 async function createSections(
   projectId: string,
-  sectionData: [{ name: string; colour: string; icon: string }],
+  sectionData: { name: string; colour: string; icon: string }[],
 ): Promise<Result<Section[], 'PROJECT_NOT_FOUND'>> {
   const project = await ProjectModel.findById(projectId);
   if (!project) {
