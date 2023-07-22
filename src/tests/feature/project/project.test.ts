@@ -297,4 +297,66 @@ describe('project', () => {
       });
     });
   });
+
+  describe('create section', () => {
+    let project: Project;
+
+    beforeEach(async () => {
+      const projectResult = await createProject(user._id.toString(), faker.word.noun(), '');
+
+      expect(projectResult.type).toBe('success');
+
+      project = (projectResult as Success<Project>).data;
+    });
+
+    test.each([
+      { sections: [{ name: faker.word.noun(), colour: faker.color.rgb(), icon: '' }] },
+      {
+        sections: [
+          { name: faker.word.noun(), colour: faker.color.rgb(), icon: '' },
+          { name: faker.word.noun(), colour: faker.color.rgb(), icon: '' },
+        ],
+      },
+    ])('valid request', async ({ sections }) => {
+      const p = agent.post(`${basePath}/projects/${project._id.toString()}/sections`).send({
+        sections,
+      });
+
+      await expect(p).resolves.toHaveProperty('status', 200);
+
+      const expectedSections = sections.map((s) => expect.objectContaining(s));
+
+      await expect(p).resolves.toHaveProperty(
+        'body.sections',
+        expect.arrayContaining(expectedSections),
+      );
+    });
+
+    describe('invalid request', () => {
+      test('too long section name', async () => {
+        const p = agent.post(`${basePath}/projects/${project._id.toString()}/sections`).send({
+          sections: [
+            {
+              name: 'a'.repeat(256),
+              colour: faker.color.rgb(),
+              icon: '',
+            },
+          ],
+        });
+
+        await expect(p).resolves.toHaveProperty('status', 400);
+
+        await expect(p).resolves.toHaveProperty('body.error.propsErrors.property', 'name');
+        await expect(p).resolves.toHaveProperty('body.error.propsErrors.constraints', 'maxLength');
+      });
+
+      test('invalid colour string', async () => {});
+
+      test.skip('invalid icon ID', async () => {});
+
+      test('missing auth', async () => {});
+
+      test.skip('missing permission to create section', async () => {});
+    });
+  });
 });

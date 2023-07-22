@@ -95,35 +95,35 @@ describe('section', () => {
 
       expect(p).resolves.toHaveProperty('body.section.tasks', expect.arrayContaining(ids));
     });
-  });
 
-  describe('invalid request', () => {
-    test('missing auth', async () => {
-      // use global request instead of agent with auth cookie
-      const p = request.get(`${basePath}/sections/randomid`);
+    describe('invalid request', () => {
+      test('missing auth', async () => {
+        // use global request instead of agent with auth cookie
+        const p = request.get(`${basePath}/sections/randomid`);
 
-      await expect(p).rejects.toMatchObject({
-        response: {
-          body: {
-            error: {
-              message: 'Missing authentication token',
+        await expect(p).rejects.toMatchObject({
+          response: {
+            body: {
+              error: {
+                message: 'Missing authentication token',
+              },
             },
           },
-        },
+        });
       });
+
+      test('invalid section id', async () => {
+        const p = agent.get(`${basePath}/sections/invalidid`);
+
+        await expect(p).resolves.toHaveProperty('status', 404);
+
+        await expect(p).resolves.toHaveProperty(
+          'body.error.message',
+          'No section with id \'invalidid\' found',
+        );
+      });
+
+      test.skip('missing permission to see section', async () => {});
     });
-
-    test('invalid section id', async () => {
-      const p = agent.get(`${basePath}/sections/invalidid`);
-
-      await expect(p).resolves.toHaveProperty('status', 404);
-
-      await expect(p).resolves.toHaveProperty(
-        'body.error.message',
-        'No section with id \'invalidid\' found',
-      );
-    });
-
-    test.skip('missing permission to see section', async () => {});
   });
 });
