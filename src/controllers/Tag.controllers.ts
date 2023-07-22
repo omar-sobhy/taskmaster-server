@@ -7,7 +7,7 @@ import ProjectModel from '../database/Project/Project.model';
 import Task from '../database/Task/Task.interface';
 import TaskModel from '../database/Task/Task.model';
 
-async function getTagData(
+async function getTags(
   tagIds: string[],
 ): Promise<Result<Tag[], 'TAGS_NOT_FOUND'>> {
   const objectIdsOrError = tagIds.map((t) => {
@@ -165,4 +165,4 @@ async function deleteTag(
   };
 }
 
-export { getTagData, deleteTag, updateTag };
+export { getTags, deleteTag, updateTag };
