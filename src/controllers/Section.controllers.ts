@@ -157,8 +157,8 @@ async function getTasks(sectionId: string): Promise<Result<Task[], 'SECTION_NOT_
 async function createTask(
   sectionId: string,
   name: string,
-  dueDate: Date | undefined,
-  assignee: string | undefined,
+  dueDate?: Date | undefined,
+  assignee?: string | undefined,
 ): Promise<Result<Task, 'ASSIGNEE_NOT_IN_PROJECT' | 'SECTION_NOT_FOUND'>> {
   try {
     const section = await SectionModel.findById(sectionId);

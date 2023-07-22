@@ -62,13 +62,13 @@ describe('user', () => {
       });
     });
 
-    // won't work for now
+    // TODO won't work for now
     test.skip('multiple user ids', async () => {
       const anotherUser = await signUp(faker.internet.userName(), 'password', 'cool@email.com');
       expect(anotherUser).not.toBeNull();
 
-      const project = await createProject(user._id.toString(), 'test project');
-      expect(project).not.toBe(null);
+      const project = await createProject(user._id.toString(), 'test project', '');
+      expect(project.type).toBe('success');
 
       const p = agent.get(`${basePath}/users`).query({
         userIds: user._id.toString(),

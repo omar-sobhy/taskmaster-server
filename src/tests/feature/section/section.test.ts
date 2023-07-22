@@ -7,8 +7,9 @@ import User from '../../../database/User/User.interface';
 import { signUp } from '../../../controllers/User.controllers';
 import Project from '../../../database/Project/Project.interface';
 import { createProject, createSections } from '../../../controllers/Project.controllers';
-import { createTask } from '../../../controllers/Task.controllers';
 import Section from '../../../database/Section/Section.interface';
+import { Success } from '../../../interfaces/Result';
+import { createTask } from '../../../controllers/Section.controllers';
 
 describe('section', () => {
   const useHttps = process.env.USE_HTTPS;
@@ -50,21 +51,19 @@ describe('section', () => {
     let section: Section;
 
     beforeAll(async () => {
-      const projectResult = await createProject(user._id.toString(), faker.word.noun());
+      const projectResult = await createProject(user._id.toString(), faker.word.noun(), '');
 
-      expect(projectResult).not.toBeNull();
+      expect(projectResult.type).toBe('success');
 
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      project = projectResult!;
+      project = (projectResult as Success<Project>).data;
 
       const sectionResult = await createSections(project._id.toString(), [
         { name: faker.word.noun(), colour: faker.color.rgb(), icon: '' },
       ]);
 
-      expect(sectionResult).not.toBeNull();
+      expect(sectionResult.type).toBe('success');
 
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      [section] = sectionResult!;
+      [section] = (sectionResult as Success<Section[]>).data;
     });
 
     test.each([
