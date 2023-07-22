@@ -5,7 +5,7 @@ import {
 class CreateUserDto {
   @IsString()
   @MinLength(4)
-  @MaxLength(20)
+  @MaxLength(65)
   public username!: string;
 
   @IsString()
