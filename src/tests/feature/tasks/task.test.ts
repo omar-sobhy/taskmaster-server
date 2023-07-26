@@ -266,4 +266,70 @@ describe('task', () => {
       });
     });
   });
+
+  describe('add comment', () => {
+    test('valid request', async () => {
+      const text = faker.lorem.lines(5);
+
+      const p = agent.post(`${basePath}/tasks/${task._id.toString()}/comments`).send({
+        text,
+      });
+
+      await expect(p).resolves.toHaveProperty('status', 200);
+
+      await expect(p).resolves.toHaveProperty('body.comment.text', text);
+    });
+
+    describe('invalid request', () => {
+      test('missing taskId', async () => {
+        const p = agent.post(`${basePath}/tasks//comments`).send({
+          text: 'test',
+        });
+
+        await expect(p).resolves.toHaveProperty('status', 404);
+      });
+
+      test('missing taskId', async () => {
+        const p = agent.post(`${basePath}/tasks/invalidid/comments`).send({
+          text: 'test',
+        });
+
+        await expect(p).resolves.toHaveProperty('status', 404);
+      });
+
+      test('missing comment body', async () => {
+        const p = agent.post(`${basePath}/tasks/${task._id.toString()}/comments`);
+
+        await expect(p).resolves.toHaveProperty('status', 403);
+
+        await expect(p).resolves.toHaveProperty('body.error.propsErrors.0.property', 'text');
+      });
+
+      test('long comment body', async () => {
+        const p = agent.post(`${basePath}/tasks/${task._id.toString()}/comments`).send({
+          text: 'a'.repeat(10001),
+        });
+
+        await expect(p).resolves.toHaveProperty('status', 403);
+
+        await expect(p).resolves.toHaveProperty('body.error.propsErrors.0.property', 'text');
+      });
+
+      test('missing auth', async () => {
+        const p = request
+          .post(`${basePath}/tasks/${task._id.toString()}/comments`)
+          .send({ text: 'test' });
+
+        await expect(p).rejects.toMatchObject({
+          response: {
+            body: {
+              error: {
+                message: 'Missing authentication token',
+              },
+            },
+          },
+        });
+      });
+    });
+  });
 });

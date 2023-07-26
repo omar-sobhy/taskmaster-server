@@ -1,7 +1,8 @@
-import { IsString } from 'class-validator';
+import { IsString, MaxLength } from 'class-validator';
 
 class CreateCommentDto {
   @IsString()
+  @MaxLength(10000)
   public text!: string;
 }
 
