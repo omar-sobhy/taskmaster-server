@@ -379,6 +379,25 @@ describe('section', () => {
         );
       });
 
+      test('assignee not in project', async () => {
+        const anotherUser = await signUp(faker.internet.userName(), 'password', 'cool@email.com');
+
+        expect(anotherUser).not.toBeNull();
+
+        const p = agent.post(`${basePath}/sections/${section._id.toString()}/tasks`).send({
+          name: faker.word.noun(),
+          dueDate: format(faker.date.future(), 'yyyy-MM-dd'),
+          assignee: anotherUser!._id.toString(),
+        });
+
+        await expect(p).resolves.toHaveProperty('status', 400);
+
+        await expect(p).resolves.toHaveProperty(
+          'body.error.message',
+          expect.stringContaining('Assignee'),
+        );
+      });
+
       test('missing auth', async () => {
         const p = request.post(`${basePath}/sections/${section._id.toString()}/tasks`).send({
           name: faker.word.noun(),
@@ -440,6 +459,12 @@ describe('section', () => {
     });
 
     describe('invalid request', () => {
+      test('missing section id', async () => {
+        const p = agent.get(`${basePath}/sections//`);
+
+        await expect(p).resolves.toHaveProperty('status', 404);
+      });
+
       test('invalid section id', async () => {
         const p = agent.get(`${basePath}/sections/invalidid/tasks`);
 

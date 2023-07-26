@@ -24,7 +24,7 @@ function errorMiddleware(
 
     response
       .status(404)
-      .json({ error: { message: error.message } })
+      .json({ error: { message: error.message, propsErrors: error.propsErrors } })
       .end();
 
     return;
@@ -37,6 +37,7 @@ function errorMiddleware(
     .json({
       error: {
         message,
+        propsErrors: error.propsErrors,
       },
     })
     .end();

@@ -9,6 +9,9 @@ import TaskNotFoundException from '../exceptions/tasks/TaskNotFoundException';
 import RequestWithUser from '../interfaces/RequestWithUser.interface';
 import authMiddleware from '../middleware/auth.middleware';
 import validationMiddleware from '../middleware/validation.middleware';
+import { taskPermissionMiddleware } from '../middleware/permission.middleware';
+import AssigneeNotInProjectException from '../exceptions/projects/AssigneeNotInProjectException';
+import TagsNotFoundException from '../exceptions/tags/TagsNotFoundException';
 
 class TaskRoutes implements RouterWrapper {
   public path = '/tasks';
@@ -20,22 +23,24 @@ class TaskRoutes implements RouterWrapper {
   }
 
   private initializeRoutes() {
+    this.router.all(`${this.path}`, authMiddleware);
+    this.router.all(`${this.path}/*`, authMiddleware);
+
     this.router.get(`${this.path}/:taskId`, TaskRoutes.getTaskData);
 
     this.router.patch(
       `${this.path}/:taskId`,
       validationMiddleware(UpdateTaskDto),
+      taskPermissionMiddleware('update'),
       TaskRoutes.updateTask,
     );
 
     this.router.post(
       `${this.path}/:taskId/comments`,
       validationMiddleware(CreateCommentDto),
+      taskPermissionMiddleware('update'),
       TaskRoutes.createComment,
     );
-
-    this.router.all(`${this.path}`, authMiddleware);
-    this.router.all(`${this.path}/*`, authMiddleware);
   }
 
   private static async updateTask(req: Request, res: Response, next: NextFunction) {
@@ -53,7 +58,14 @@ class TaskRoutes implements RouterWrapper {
     });
 
     if (taskOrError.type === 'error') {
-      next(new TaskNotFoundException(taskId));
+      if (taskOrError.errorType === 'TASK_NOT_FOUND') {
+        next(new TaskNotFoundException(taskId));
+      } else if (taskOrError.errorType === 'ASSIGNEE_NOT_IN_PROJECT') {
+        next(new AssigneeNotInProjectException(assignee, taskOrError.errorData as string));
+      } else {
+        next(new TagsNotFoundException(tags));
+      }
+
       return;
     }
 

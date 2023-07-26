@@ -1,6 +1,7 @@
 import { ValidationArguments, registerDecorator } from 'class-validator';
+import { isValid, parse, parseISO } from 'date-fns';
 
-export default function IsValidDateString() {
+export default function IsValidDateString(long = false) {
   return function (object: object, propertyName: string) {
     registerDecorator({
       name: 'isValidDateString',
@@ -13,6 +14,12 @@ export default function IsValidDateString() {
         validate(value: any, args: ValidationArguments) {
           if (typeof value !== 'string') {
             return false;
+          }
+
+          if (long) {
+            const date = parseISO(value);
+
+            return !Number.isNaN(Number(date));
           }
 
           const data = value.split('-');
